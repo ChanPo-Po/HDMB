@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POPOPHONE - HỒ SƠ HĐMB V2 NETLIFY</title>
+
+<style>
+:root{
+  --blue:#063b78;
+  --blue2:#0b55a0;
+  --green:#198754;
+  --orange:#ff9800;
+  --red:#dc3545;
+  --bg:#f3f6fb;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#d9e1ec;
+  --soft:#f4f8ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+.wrap{max-width:1280px;margin:auto;padding:18px}
+.header{background:linear-gradient(135deg,var(--blue),#0b5db3);color:#fff;padding:18px 20px;border-radius:16px;box-shadow:0 8px 24px #063b7820;margin-bottom:16px}
+.header h1{margin:0;font-size:26px;letter-spacing:.2px}
+.header p{margin:6px 0 0;color:#e8f2ff}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab-btn{border:none;border-radius:10px;padding:12px 16px;font-weight:800;cursor:pointer;background:#fff;color:var(--blue);border:1px solid #dbe7f5}
+.tab-btn.active{background:var(--blue);color:white}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:16px;border:1px solid #edf1f7;box-shadow:0 4px 16px #0001}
+.card h3{margin:0 0 12px;color:#123;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field-full{grid-column:span 4}
+.field label{font-size:12px;font-weight:800;color:#123;text-transform:uppercase;letter-spacing:.2px}
+.hint{font-size:12px;color:var(--muted);margin-top:-2px}
+input,select,textarea,button{font-family:Arial,Helvetica,sans-serif;font-size:14px}
+input,select,textarea{padding:11px 10px;border:1px solid #ccd6e2;border-radius:8px;background:#fff}
+input::placeholder,textarea::placeholder{color:#9aa6b2}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px #0b55a015}
+textarea{min-height:72px;resize:vertical}
+button{border:none;cursor:pointer;font-weight:800;transition:.12s}
+button:hover{opacity:.92;transform:translateY(-1px)}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.btn{background:var(--blue);color:#fff;border-radius:9px;padding:11px 14px}
+.btn2{background:var(--green);color:#fff;border-radius:9px;padding:11px 14px}
+.btn3{background:var(--orange);color:#fff;border-radius:9px;padding:11px 14px}
+.btn4{background:var(--red);color:#fff;border-radius:9px;padding:11px 14px}
+.btn-light{background:#eef4fb;color:var(--blue);border:1px solid #c9ddf3;border-radius:9px;padding:11px 14px}
+.print-btn{min-width:210px;height:46px;font-size:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ddd;padding:8px;font-size:13px;vertical-align:top}
+th{background:var(--blue);color:white;text-align:center}
+.right{text-align:right}.center{text-align:center}
+.table-wrap{overflow:auto}
+.summary-grid{display:grid;grid-template-columns:150px 210px 1fr;gap:10px;margin-top:14px}
+.summary-pill{background:var(--soft);border:1px solid #cfe0f5;border-radius:12px;padding:12px 14px;min-height:62px}
+.summary-label{font-size:12px;color:#456;margin-bottom:4px;font-weight:700}
+.summary-value{font-size:19px;font-weight:900;color:#061f40}
+.validation-box{margin-top:12px;border-radius:12px;padding:12px 14px;border:1px solid #cfe0f5;background:#f7fbff}
+.validation-box.ok{border-color:#b7e2c5;background:#f3fbf5;color:#0f5132}
+.validation-box.err{border-color:#f3b6be;background:#fff5f6;color:#842029}
+.validation-box.warn{border-color:#ffe0a3;background:#fffaf0;color:#805500}
+.validation-box ul{margin:8px 0 0 20px;padding:0}
+.validation-title{font-weight:900}
+.search-box{display:grid;grid-template-columns:1fr 150px;gap:10px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;background:#eef4fb;color:var(--blue)}
+.toast{position:fixed;right:18px;bottom:18px;background:#111827;color:white;padding:12px 14px;border-radius:12px;box-shadow:0 8px 24px #0003;max-width:380px;display:none;z-index:9999}
+.print-area{display:none}
+.hidden{display:none!important}
+.api-note{background:#fff7e6;border:1px solid #ffd591;color:#7a4b00;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-weight:700}
+@media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr)}.field-full{grid-column:span 2}.summary-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:12px}.grid{grid-template-columns:1fr}.field-full{grid-column:span 1}.header h1{font-size:21px}.search-box{grid-template-columns:1fr}.print-btn{width:100%}}
+
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:white}
+  body *{visibility:hidden}
+  .print-area,.print-area *{visibility:visible}
+  .print-area{display:block;position:absolute;left:0;top:0;width:100%;padding:0;background:white;color:#000;font-family:"Times New Roman",serif;font-size:13.5px;line-height:1.35}
+  .no-print{display:none!important}
+  .doc-title{text-align:center;font-weight:bold;font-size:18px;margin:8px 0 2px;text-transform:uppercase}
+  .doc-center{text-align:center}
+  .doc-right{text-align:right}
+  .doc-section-title{font-weight:bold;margin:10px 0 4px;text-transform:uppercase}
+  .print-area table{border-collapse:collapse;width:100%;page-break-inside:auto}
+  .print-area tr{page-break-inside:avoid;page-break-after:auto}
+  .print-area th,.print-area td{border:1px solid #000;padding:5px;font-size:12.5px;color:#000;background:white}
+  .print-area th{font-weight:bold;text-align:center}
+  .no-border,.no-border td{border:none!important}
+  .signature td{height:88px;text-align:center;vertical-align:top;border:none!important;font-weight:bold}
+  .page-break{page-break-before:always}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap no-print">
+  <div class="header">
+    <h1>📦 HỒ SƠ HĐMB MÁY POPOPHONE V2</h1>
+    <p>Netlify → Apps Script API → Google Sheet. Không quản lý tồn kho, chỉ quản lý hồ sơ HĐMB.</p>
+  </div>
+
+  <div class="api-note">
+    API đã gắn sẵn. Nếu đổi Apps Script Web App URL, sửa biến <b>API_URL</b> trong code.
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('create')">➕ Tạo hồ sơ mới</button>
+    <button class="tab-btn" onclick="showTab('search')">🔎 Tra cứu / in lại</button>
+  </div>
+
+  <div id="tabCreate">
+    <div class="card">
+      <h3>Thông tin người bán / người giao</h3>
+      <div class="grid">
+        <div class="field"><label>Họ và tên người bán *</label><input id="sellerName" placeholder="VD: Nguyễn Ngọc Hải" oninput="updateValidation()"><div class="hint">Nhập đúng tên trên CCCD / giấy tờ.</div></div>
+        <div class="field"><label>Số điện thoại người bán *</label><input id="sellerPhone" placeholder="VD: 0395 489 564"></div>
+        <div class="field"><label>Số CCCD / MST người bán</label><input id="sellerCCCD" placeholder="VD: 056095001983"></div>
+        <div class="field"><label>Địa chỉ người bán</label><input id="sellerAddress" placeholder="VD: TP.Hồ Chí Minh"></div>
+        <div class="field"><label>Ngày cấp CCCD</label><input id="sellerIssueDate" type="date"><div class="hint">Chọn ngày ghi trên CCCD.</div></div>
+        <div class="field"><label>Nơi cấp CCCD</label><input id="sellerIssuePlace" placeholder="VD: Cục Cảnh sát QLHC về TTXH"></div>
+        <div class="field"><label>Số HĐ / mã phiếu</label><input id="contractNo" placeholder="Bỏ trống để tự sinh số HĐ"><div class="hint">VD: HĐMB-2026-00015</div></div>
+        <div class="field"><label>Ngày lập chứng từ *</label><input id="date" type="date"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Thông tin nhập kho / bên mua</h3>
+      <div class="grid">
+        <div class="field"><label>Hình thức thanh toán *</label><select id="payment"><option>Tiền mặt</option><option>Chuyển khoản</option><option>Công nợ</option></select></div>
+        <div class="field"><label>Người đại diện giao dịch / người nhận *</label><input id="staff" placeholder="VD: Nguyễn Phạm Công Trường" oninput="updateValidation()"><div class="hint">Tên này sẽ hiện trong HĐMB bên mua.</div></div>
+        <div class="field"><label>SĐT người nhận / đại diện *</label><input id="staffPhone" placeholder="VD: 0877 067 485" oninput="updateValidation()"></div>
+        <div class="field"><label>Chức vụ / bộ phận</label><input id="department" placeholder="VD: Nhân viên kho" value="Nhân viên kho"></div>
+        <div class="field field-full"><label>Chi nhánh / kho nhập *</label><input id="branch" placeholder="VD: 113 Yersin..." value="113 Yersin, KP.Phú Cường 1, P.Thủ Dầu Một, TP.Hồ Chí Minh"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Nhập thông tin máy</h3>
+      <div class="grid">
+        <div class="field"><label>IMEI / Serial máy *</label><input id="imei" placeholder="VD: 353083962932082"><div class="hint">Nhập đúng IMEI trên máy, hệ thống sẽ báo nếu trùng.</div></div>
+        <div class="field"><label>Tên máy / dòng máy *</label><input id="model" placeholder="VD: iPhone 14 Pro Max"></div>
+        <div class="field"><label>Dung lượng</label><input id="gb" placeholder="VD: 128GB / 256GB"></div>
+        <div class="field"><label>Màu sắc</label><input id="color" placeholder="VD: Trắng / Đen / Tím"></div>
+        <div class="field"><label>Tình trạng máy</label><input id="condition" placeholder="VD: Máy cũ, đã qua sử dụng" value="Máy cũ, đã qua sử dụng"></div>
+        <div class="field"><label>Đơn vị tính</label><input id="unit" placeholder="VD: Máy" value="Máy"></div>
+        <div class="field"><label>Số lượng *</label><input id="qty" type="number" value="1" min="1" placeholder="VD: 1"></div>
+        <div class="field"><label>Giá nhập mỗi máy *</label><input id="price" placeholder="VD: 14.100.000"><div class="hint">Có thể nhập 14100000 hoặc 14.100.000.</div></div>
+        <div class="field field-full"><label>Ghi chú tình trạng chi tiết</label><textarea id="note" placeholder="VD: Main zin, màn đẹp, Face ID đủ, iCloud sạch, ngoại hình 98%..."></textarea></div>
+      </div>
+      <br>
+      <div class="actions">
+        <button class="btn" onclick="addItem()">+ Thêm máy</button>
+        <button class="btn-light" onclick="checkCurrentIMEIWithSheet()">Check IMEI trên Google Sheet</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Danh sách máy nhập</h3>
+      <div class="table-wrap"><table><thead><tr><th>IMEI/Serial</th><th>Dòng máy</th><th>GB</th><th>Màu</th><th>Tình trạng</th><th>ĐVT</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Ghi chú</th><th>Xóa</th></tr></thead><tbody id="list"></tbody></table></div>
+
+      <div class="summary-grid">
+        <div class="summary-pill"><div class="summary-label">📦 Tổng SL</div><div class="summary-value"><span id="totalQty">0</span> máy</div></div>
+        <div class="summary-pill"><div class="summary-label">💰 Tổng tiền</div><div class="summary-value"><span id="total">0</span>đ</div></div>
+        <div class="summary-pill"><div class="summary-label">🔤 Bằng chữ</div><div class="summary-value" style="font-size:15px"><span id="totalWords">Không đồng</span></div></div>
+      </div>
+
+      <div id="validationBox" class="validation-box ok"><div class="validation-title">✅ Dữ liệu hợp lệ</div></div>
+
+      <div style="margin-top:12px" class="actions">
+        <button id="btnSave" class="btn2" onclick="saveToSheet()">💾 Lưu Google Sheet</button>
+        <button id="btnHDMB" class="btn2 print-btn print-btn-main" onclick="printDoc('hdmb')">In HĐMB</button>
+        <button id="btnBangKe" class="btn print-btn print-btn-main" onclick="printDoc('bangke')">In bảng kê</button>
+        <button id="btnPNK" class="btn3 print-btn print-btn-main" onclick="printDoc('phieunhapkho')">In phiếu nhập kho 01-VT</button>
+        <button class="btn4" onclick="clearAll()">Xóa toàn bộ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabSearch" class="hidden">
+    <div class="card">
+      <h3>Tra cứu hồ sơ đã lưu</h3>
+      <div class="search-box">
+        <input id="searchKeyword" placeholder="Nhập Số HĐ / IMEI / SĐT / CCCD / tên người bán">
+        <button class="btn" onclick="searchContracts()">🔎 Tìm kiếm</button>
+      </div>
+      <div class="hint" style="margin-top:8px">Ví dụ: HĐMB-2026-00015 hoặc 353083962932082</div>
+    </div>
+
+    <div class="card">
+      <h3>Kết quả tìm kiếm</h3>
+      <div class="table-wrap"><table><thead><tr><th>Số HĐ</th><th>Ngày lập</th><th>Người bán</th><th>SĐT</th><th>Tổng SL</th><th>Tổng tiền</th><th>Thao tác</th></tr></thead><tbody id="searchResults"><tr><td colspan="7" class="center">Chưa có dữ liệu tìm kiếm</td></tr></tbody></table></div>
+    </div>
+
+    <div id="loadedContractBox" class="card hidden">
+      <h3>Hồ sơ đang mở: <span id="loadedContractNo" class="badge"></span></h3>
+      <div class="summary-grid">
+        <div class="summary-pill"><div class="summary-label">📦 Tổng SL</div><div class="summary-value"><span id="loadedTotalQty">0</span> máy</div></div>
+        <div class="summary-pill"><div class="summary-label">💰 Tổng tiền</div><div class="summary-value"><span id="loadedTotal">0</span>đ</div></div>
+        <div class="summary-pill"><div class="summary-label">👤 Người bán</div><div class="summary-value" style="font-size:15px"><span id="loadedSeller">---</span></div></div>
+      </div>
+      <br>
+      <div class="actions">
+        <button class="btn2 print-btn" onclick="printLoaded('hdmb')">In lại HĐMB</button>
+        <button class="btn print-btn" onclick="printLoaded('bangke')">In lại bảng kê</button>
+        <button class="btn3 print-btn" onclick="printLoaded('phieunhapkho')">In lại phiếu nhập kho</button>
+        <button class="btn-light" onclick="fillFormFromLoaded()">Đổ lại lên form sửa/in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="print-area" id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_URL = "/.netlify/functions/hdmb-api";
+
+let items = JSON.parse(localStorage.getItem("po_hdmb_v2_draft_items") || "[]");
+let loadedContract = null;
+document.getElementById("date").valueAsDate = new Date();
+
+async function api(action, data = {}){
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ action, ...data })
+  });
+
+  const text = await res.text();
+  try{
+    return JSON.parse(text);
+  }catch(e){
+    throw new Error("API không trả JSON. Có thể Apps Script chưa deploy đúng quyền. Response: " + text.slice(0,200));
+  }
+}
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.style.display = 'block';
+  setTimeout(()=> el.style.display='none', 3500);
+}
+function showTab(tab){
+  document.getElementById('tabCreate').classList.toggle('hidden', tab !== 'create');
+  document.getElementById('tabSearch').classList.toggle('hidden', tab !== 'search');
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active', (tab === 'create' && i===0) || (tab === 'search' && i===1));
+  });
+}
+function pad(n){return String(n).padStart(2,'0')}
+function ymd(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`}
+function dmy(str){
+  if(!str) return "...... / ...... / ........";
+  const [y,m,d] = String(str).split('-');
+  if(!y || !m || !d) return str;
+  return `${d}/${m}/${y}`;
+}
+function dateParts(str){
+  if(!str) return {d:'……',m:'……',y:'………'};
+  const [y,m,d] = String(str).split('-');
+  return {d:d||'……',m:m||'……',y:y||'………'};
+}
+function parseMoney(v){return Number(String(v || '').replace(/\./g,'').replace(/,/g,'').replace(/[^\d]/g,'')) || 0}
+function money(n){return Number(n || 0).toLocaleString("vi-VN")}
+function escapeHTML(s){return String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function normalizeImei(v){return String(v || '').trim().replace(/[\s\-\.]/g,'').toUpperCase()}
+function saveDraft(){localStorage.setItem("po_hdmb_v2_draft_items", JSON.stringify(items))}
+function totalAmount(){return items.reduce((s,x)=>s + Number(x.qty || 0) * Number(x.price || 0), 0)}
+function totalQuantity(){return items.reduce((s,x)=>s + Number(x.qty || 0), 0)}
+function getContractNo(){
+  const manual = contractNo.value.trim();
+  if(manual) return manual;
+  const d = new Date(date.value || new Date());
+  return `HĐMB-${d.getFullYear()}-${ymd(d)}-${String(Date.now()).slice(-4)}`;
+}
+
+const ones = ["không","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+function readTriple(num, full){
+  let tram=Math.floor(num/100), chuc=Math.floor((num%100)/10), donvi=num%10, s=[];
+  if(full||tram>0){s.push(ones[tram]+" trăm"); if(chuc===0&&donvi>0)s.push("lẻ")}
+  if(chuc>1){s.push(ones[chuc]+" mươi"); if(donvi===1)s.push("mốt"); else if(donvi===5)s.push("lăm"); else if(donvi>0)s.push(ones[donvi])}
+  else if(chuc===1){s.push("mười"); if(donvi===5)s.push("lăm"); else if(donvi>0)s.push(ones[donvi])}
+  else if(donvi>0&&(full||tram>0))s.push(ones[donvi]);
+  else if(donvi>0)s.push(ones[donvi]);
+  return s.join(" ");
+}
+function moneyToWords(n){
+  n=Math.round(Number(n||0));
+  if(n===0)return "Không đồng";
+  const units=["","nghìn","triệu","tỷ","nghìn tỷ","triệu tỷ"];
+  let parts=[]; while(n>0){parts.push(n%1000); n=Math.floor(n/1000)}
+  let words=[];
+  for(let j=parts.length-1;j>=0;j--){
+    if(parts[j]!==0){words.push(readTriple(parts[j], j<parts.length-1)); if(units[j])words.push(units[j])}
+  }
+  let res=words.join(" ").replace(/\s+/g,' ').trim();
+  return res.charAt(0).toUpperCase()+res.slice(1)+" đồng";
+}
+
+function getInfo(){
+  return {
+    contractNo:getContractNo(), date:date.value,
+    sellerName:sellerName.value.trim(), sellerPhone:sellerPhone.value.trim(), sellerCCCD:sellerCCCD.value.trim(),
+    sellerAddress:sellerAddress.value.trim(), sellerIssueDate:sellerIssueDate.value, sellerIssuePlace:sellerIssuePlace.value.trim(),
+    payment:payment.value, staff:staff.value.trim(), staffPhone:staffPhone.value.trim(), department:department.value.trim(), branch:branch.value.trim(),
+    totalQty:totalQuantity(), totalAmount:totalAmount(), totalWords:moneyToWords(totalAmount())
+  };
+}
+function buildPayload(){
+  return {
+    info:getInfo(),
+    items:items.map(x=>({
+      imei:x.imei, model:x.model, gb:x.gb, color:x.color, condition:x.condition, unit:x.unit,
+      qty:Number(x.qty||0), price:Number(x.price||0), amount:Number(x.qty||0)*Number(x.price||0), note:x.note
+    }))
+  };
+}
+function validateItems(){
+  const errors=[];
+  if(items.length===0) errors.push('Chưa có máy trong danh sách.');
+  const map={};
+  items.forEach((x,i)=>{
+    const row=i+1, imeiNorm=normalizeImei(x.imei);
+    if(!imeiNorm) errors.push(`Dòng ${row}: Chưa nhập IMEI/Serial.`);
+    else map[imeiNorm]=(map[imeiNorm]||0)+1;
+    if(!String(x.model||'').trim()) errors.push(`Dòng ${row}: Chưa nhập dòng máy.`);
+    if(!Number(x.qty||0)||Number(x.qty||0)<=0) errors.push(`Dòng ${row}: Số lượng phải lớn hơn 0.`);
+    if(!Number(x.price||0)||Number(x.price||0)<=0) errors.push(`Dòng ${row}: Chưa nhập đơn giá hoặc đơn giá = 0.`);
+  });
+  Object.entries(map).forEach(([imei,count])=>{if(count>1)errors.push(`Trùng IMEI/Serial trong phiếu hiện tại: ${imei} (${count} lần).`)});
+  if(items.length>0&&totalAmount()<=0) errors.push('Tổng tiền = 0, kiểm tra lại đơn giá.');
+  if(!sellerName.value.trim()) errors.push('Chưa nhập họ tên người bán.');
+  if(!staff.value.trim()) errors.push('Chưa nhập người đại diện giao dịch / người nhận.');
+  if(!staffPhone.value.trim()) errors.push('Chưa nhập SĐT người nhận / đại diện.');
+  return errors;
+}
+function updateValidation(extraErrors=[]){
+  const errors=validateItems().concat(extraErrors||[]);
+  const box=document.getElementById('validationBox');
+  const printButtons=document.querySelectorAll('.print-btn-main');
+  const saveBtn=document.getElementById('btnSave');
+  if(errors.length){
+    box.className='validation-box err';
+    box.innerHTML=`<div class="validation-title">🔴 Có ${errors.length} lỗi cần sửa trước khi in/lưu</div><ul>${errors.map(e=>`<li>${escapeHTML(e)}</li>`).join('')}</ul>`;
+    printButtons.forEach(b=>b.disabled=true); saveBtn.disabled=true;
+  }else{
+    box.className='validation-box ok';
+    box.innerHTML='<div class="validation-title">✅ Dữ liệu hợp lệ, có thể in/lưu hồ sơ</div>';
+    printButtons.forEach(b=>b.disabled=false); saveBtn.disabled=false;
+  }
+  return errors;
+}
+
+function addItem(){
+  const item={imei:imei.value.trim(), model:model.value.trim(), gb:gb.value.trim(), color:color.value.trim(), condition:condition.value.trim()||"Máy cũ, đã qua sử dụng", unit:unit.value.trim()||"Máy", qty:Number(qty.value||1), price:parseMoney(price.value), note:note.value.trim()};
+  if(!item.imei||!item.model){alert("Nhập ít nhất IMEI và dòng máy");return}
+  const imeiNorm=normalizeImei(item.imei);
+  if(imeiNorm&&items.some(x=>normalizeImei(x.imei)===imeiNorm)) alert("Cảnh báo: IMEI/Serial này đã có trong phiếu hiện tại. Hệ thống sẽ không cho in/lưu cho tới khi sửa trùng.");
+  items.push(item); saveDraft(); render();
+  imei.value=model.value=gb.value=color.value=price.value=note.value="";
+  condition.value="Máy cũ, đã qua sử dụng"; unit.value="Máy"; qty.value=1; imei.focus();
+}
+function removeItem(i){items.splice(i,1); saveDraft(); render()}
+function clearAll(){
+  if(confirm("Xóa toàn bộ form và danh sách máy?")){
+    items=[]; saveDraft();
+    sellerName.value=sellerPhone.value=sellerCCCD.value=sellerAddress.value=sellerIssueDate.value=sellerIssuePlace.value=contractNo.value="";
+    staff.value=staffPhone.value=""; department.value="Nhân viên kho"; payment.value="Tiền mặt"; document.getElementById("date").valueAsDate=new Date();
+    render();
+  }
+}
+function render(){
+  list.innerHTML=items.map((x,i)=>{
+    const sub=x.qty*x.price;
+    return `<tr><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.model)}</td><td>${escapeHTML(x.gb)}</td><td>${escapeHTML(x.color)}</td><td>${escapeHTML(x.condition)}</td><td class="center">${escapeHTML(x.unit)}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money(sub)}</td><td>${escapeHTML(x.note)}</td><td class="center"><button class="btn4" onclick="removeItem(${i})">X</button></td></tr>`;
+  }).join('') || `<tr><td colspan="11" class="center">Chưa có máy</td></tr>`;
+  totalQty.innerText=money(totalQuantity()); total.innerText=money(totalAmount()); totalWords.innerText=moneyToWords(totalAmount()); updateValidation();
+}
+
+async function checkCurrentIMEIWithSheet(){
+  if(!items.length){alert("Chưa có IMEI để check");return}
+  toast("Đang check IMEI trên Google Sheet...");
+  try{
+    const res=await api("checkIMEIs", { imeis:items.map(x=>x.imei).filter(Boolean) });
+    const duplicates=(res&&res.duplicates)||[];
+    if(!duplicates.length){toast("✅ Không phát hiện IMEI trùng trên Google Sheet."); updateValidation(); return}
+    const errs=duplicates.map(x=>`IMEI đã tồn tại: ${x.imei} - HĐ: ${x.contractNo||''} - Ngày: ${x.date||''}`);
+    updateValidation(errs); toast("🔴 Có IMEI đã tồn tại trong hồ sơ cũ.");
+  }catch(err){alert("Lỗi check IMEI: "+err.message)}
+}
+async function saveToSheet(){
+  const errors=updateValidation();
+  if(errors.length){alert("Còn lỗi dữ liệu, sửa xong mới lưu được.");return}
+  const payload=buildPayload();
+  if(!confirm(`Lưu hồ sơ ${payload.info.contractNo} vào Google Sheet?`)) return;
+  btnSave.disabled=true; btnSave.innerText="Đang lưu...";
+  try{
+    const res=await api("saveContract", { data:payload });
+    if(res&&res.ok){contractNo.value=res.contractNo||payload.info.contractNo; toast("✅ Đã lưu hồ sơ vào Google Sheet.");}
+    else alert("Không lưu được: "+(res&&res.message?res.message:"Không rõ lỗi"));
+  }catch(err){alert("Lỗi lưu Google Sheet: "+err.message)}
+  btnSave.disabled=false; btnSave.innerText="💾 Lưu Google Sheet";
+}
+async function searchContracts(){
+  const keyword=searchKeyword.value.trim();
+  if(!keyword){alert("Nhập từ khóa cần tìm");return}
+  searchResults.innerHTML=`<tr><td colspan="7" class="center">Đang tìm...</td></tr>`;
+  try{
+    const res=await api("searchContracts", { keyword });
+    renderSearchResults((res&&res.results)||res||[]);
+  }catch(err){
+    searchResults.innerHTML=`<tr><td colspan="7" class="center">Lỗi tìm kiếm: ${escapeHTML(err.message)}</td></tr>`;
+  }
+}
+function renderSearchResults(rows){
+  if(!rows.length){searchResults.innerHTML=`<tr><td colspan="7" class="center">Không tìm thấy hồ sơ</td></tr>`;return}
+  searchResults.innerHTML=rows.map(r=>`<tr><td><b>${escapeHTML(r.contractNo)}</b></td><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.sellerName)}</td><td>${escapeHTML(r.sellerPhone)}</td><td class="center">${escapeHTML(r.totalQty)}</td><td class="right">${money(r.totalAmount)}</td><td class="center"><button class="btn-light" onclick="loadContract('${escapeHTML(r.contractNo)}')">Mở / In lại</button></td></tr>`).join('');
+}
+async function loadContract(contractNoValue){
+  toast("Đang mở hồ sơ...");
+  try{
+    const res=await api("getContract", { contractNo:contractNoValue });
+    const data=res&&res.data?res.data:res;
+    if(!data||!data.info){alert("Không tìm thấy hồ sơ");return}
+    loadedContract=data;
+    loadedContractNo.innerText=data.info.contractNo;
+    loadedTotalQty.innerText=money(data.info.totalQty||(data.items||[]).reduce((s,x)=>s+Number(x.qty||0),0));
+    loadedTotal.innerText=money(data.info.totalAmount||(data.items||[]).reduce((s,x)=>s+Number(x.amount||0),0));
+    loadedSeller.innerText=data.info.sellerName||"---";
+    loadedContractBox.classList.remove('hidden'); toast("✅ Đã mở hồ sơ.");
+  }catch(err){alert("Lỗi mở hồ sơ: "+err.message)}
+}
+function fillFormFromLoaded(){
+  if(!loadedContract){alert("Chưa mở hồ sơ");return}
+  const info=loadedContract.info||{};
+  contractNo.value=info.contractNo||""; date.value=info.dateISO||info.date||"";
+  sellerName.value=info.sellerName||""; sellerPhone.value=info.sellerPhone||""; sellerCCCD.value=info.sellerCCCD||""; sellerAddress.value=info.sellerAddress||"";
+  sellerIssueDate.value=info.sellerIssueDateISO||info.sellerIssueDate||""; sellerIssuePlace.value=info.sellerIssuePlace||"";
+  payment.value=info.payment||"Tiền mặt"; staff.value=info.staff||""; staffPhone.value=info.staffPhone||""; department.value=info.department||"Nhân viên kho"; branch.value=info.branch||branch.value;
+  items=(loadedContract.items||[]).map(x=>({imei:x.imei||"",model:x.model||"",gb:x.gb||"",color:x.color||"",condition:x.condition||"Máy cũ, đã qua sử dụng",unit:x.unit||"Máy",qty:Number(x.qty||1),price:Number(x.price||0),note:x.note||""}));
+  saveDraft(); render(); showTab('create');
+}
+
+function hdmbTable(itemList){
+  return `<table><tr><th>STT</th><th>Dòng máy</th><th>GB</th><th>IMEI/Serial</th><th>Tình trạng</th><th>Giá (VNĐ)</th><th>Ghi chú</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.model)} ${escapeHTML(x.color)}</td><td class="center">${escapeHTML(x.gb)}</td><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.condition)}</td><td class="right">${money(x.price)}</td><td>${escapeHTML(x.note)}</td></tr>`).join('')}</table>`;
+}
+function bangKeTable(itemList){
+  return `<table><tr><th>STT</th><th>EMEI/Serial</th><th>Tên hàng hóa</th><th>ĐVT</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th>Ghi chú</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.model)} ${escapeHTML(x.gb)} ${escapeHTML(x.color)}</td><td class="center">${escapeHTML(x.unit)}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money((x.qty||0)*(x.price||0))}</td><td>${escapeHTML(x.note||x.condition)}</td></tr>`).join('')}</table>`;
+}
+function pnkTable(itemList){
+  return `<table><tr><th>STT</th><th>Tên, nhãn hiệu, quy cách vật tư, hàng hóa</th><th>Mã số</th><th>ĐVT</th><th colspan="2">Số lượng<br>Theo chứng từ / Thực nhập</th><th>Đơn giá</th><th>Thành tiền</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.model)} ${escapeHTML(x.gb)} ${escapeHTML(x.color)}<br>IMEI: ${escapeHTML(x.imei)}</td><td></td><td class="center">${escapeHTML(x.unit)}</td><td class="center">${x.qty}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money((x.qty||0)*(x.price||0))}</td></tr>`).join('')}</table>`;
+}
+function paymentChecks(pay){return `☐ Tiền mặt &nbsp;&nbsp; ☐ Chuyển khoản &nbsp;&nbsp; ☐ Công nợ`.replace(`☐ ${pay}`,`☑ ${pay}`)}
+function sumItems(itemList){return itemList.reduce((s,x)=>s+Number(x.qty||0)*Number(x.price||0),0)}
+function printHDMB(info,itemList){
+  const p=dateParts(info.date), total=sumItems(itemList);
+  return `<div class="doc-center"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập – Tự do – Hạnh phúc</b></div><div class="doc-title">HỢP ĐỒNG MUA BÁN ĐIỆN THOẠI CŨ</div><div class="doc-center"><b>Số: ${escapeHTML(info.contractNo)}</b></div><p>Căn cứ Bộ luật Dân sự năm 2015;</p><p>Căn cứ nhu cầu và sự thỏa thuận giữa các bên.</p><p>Hôm nay, ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b>, tại POPOPHONE, chúng tôi gồm có:</p><div class="doc-section-title">BÊN BÁN (BÊN A)</div><p>Họ và tên: <b>${escapeHTML(info.sellerName)}</b></p><p>CMND/CCCD số: <b>${escapeHTML(info.sellerCCCD)}</b></p><p>Ngày cấp: <b>${dmy(info.sellerIssueDate)}</b> &nbsp;&nbsp; Nơi cấp: <b>${escapeHTML(info.sellerIssuePlace)}</b></p><p>Số điện thoại: <b>${escapeHTML(info.sellerPhone)}</b></p><p>Địa chỉ: <b>${escapeHTML(info.sellerAddress)}</b></p><div class="doc-section-title">BÊN MUA (BÊN B)</div><p>Tên hộ kinh doanh: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b></p><p>Mã số thuế: <b>3703340710</b></p><p>Người đại diện giao dịch: <b>${escapeHTML(info.staff)}</b></p><p>Chức vụ: <b>${escapeHTML(info.department)}</b></p><p>Số điện thoại: <b>${escapeHTML(info.staffPhone)}</b></p><div class="doc-section-title">ĐIỀU 1. ĐỐI TƯỢNG HỢP ĐỒNG</div><p>Bên A đồng ý bán và Bên B đồng ý mua các thiết bị điện thoại di động đã qua sử dụng theo danh sách chi tiết tại Phụ lục 01 đính kèm hợp đồng này.</p><p>Bên A xác nhận các thiết bị bán cho Bên B không phải tài sản phạm pháp, nếu phát sinh tranh chấp pháp lý Bên A hoàn toàn chịu trách nhiệm.</p><div class="doc-section-title">ĐIỀU 2. GIÁ TRỊ HỢP ĐỒNG VÀ THANH TOÁN</div><p>Tổng giá trị hợp đồng: <b>${money(total)}đ</b></p><p>(Bằng chữ: <b>${moneyToWords(total)}</b>)</p><p>Phương thức thanh toán: ${paymentChecks(info.payment)}</p><p>Thời điểm thanh toán: Ngay khi hoàn tất việc bàn giao và kiểm tra máy.</p><div class="doc-section-title">ĐIỀU 3. GIAO NHẬN HÀNG</div><p>Địa điểm giao nhận: <b>${escapeHTML(info.branch)}</b></p><p>Thời gian giao nhận: Ngày <b>${dmy(info.date)}</b></p><p>Hai bên sẽ lập Phiếu nhập kho hoặc Biên bản giao nhận để xác nhận việc bàn giao thiết bị.</p><div class="doc-section-title">ĐIỀU 4. CAM KẾT CỦA BÊN BÁN</div><p>1. Thiết bị bán là tài sản hợp pháp, không phải hàng trộm cắp hoặc tranh chấp.</p><p>2. Cung cấp đúng số lượng, đúng IMEI và tình trạng máy như phụ lục.</p><p>3. Chịu trách nhiệm nếu phát sinh tranh chấp về nguồn gốc thiết bị.</p><div class="doc-section-title">ĐIỀU 5. CAM KẾT CỦA BÊN MUA</div><p>1. Thanh toán đầy đủ và đúng hạn.</p><p>2. Kiểm tra IMEI, số lượng và tình trạng máy ngay khi nhận hàng.</p><div class="doc-section-title">ĐIỀU 6. GIẢI QUYẾT TRANH CHẤP</div><p>Hai bên ưu tiên giải quyết tranh chấp bằng thương lượng. Nếu không đạt được thỏa thuận, tranh chấp sẽ được giải quyết tại Tòa án nhân dân có thẩm quyền.</p><div class="doc-section-title">ĐIỀU 7. ĐIỀU KHOẢN CHUNG</div><p>Hợp đồng có hiệu lực kể từ ngày ký.</p><p>Hợp đồng được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p><table class="signature"><tr><td>ĐẠI DIỆN BÊN BÁN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>ĐẠI DIỆN BÊN MUA<br><span style="font-weight:normal">(Ký, ghi rõ họ tên, đóng dấu nếu có)</span></td></tr></table><div class="page-break"></div><div class="doc-title">PHỤ LỤC 01 – DANH SÁCH THIẾT BỊ</div><div class="doc-center">(Kèm theo Hợp đồng số <b>${escapeHTML(info.contractNo)}</b> ngày <b>${dmy(info.date)}</b>)</div><br>${hdmbTable(itemList)}`;
+}
+function printBangKe(info,itemList){
+  const total=sumItems(itemList);
+  return `<div><b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b></div><div><b>MST:</b> 3703340710</div><div><b>Địa chỉ:</b> ${escapeHTML(info.branch)}</div><div class="doc-title">BẢNG KÊ BÀN GIAO HÀNG HÓA</div><p><b>Ngày bàn giao:</b> ${dmy(info.date)} &nbsp;&nbsp; <b>Số HĐ:</b> ${escapeHTML(info.contractNo)}</p><p><b>Người giao:</b> ${escapeHTML(info.sellerName)} &nbsp;&nbsp; <b>SĐT:</b> ${escapeHTML(info.sellerPhone)}</p><p><b>Người nhận:</b> ${escapeHTML(info.staff)} &nbsp;&nbsp; <b>Bộ phận:</b> ${escapeHTML(info.department)}</p>${bangKeTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>NGƯỜI GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>NGƯỜI NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>QUẢN LÝ / KẾ TOÁN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td></tr></table>`;
+}
+function printPNK(info,itemList){
+  const p=dateParts(info.date), total=sumItems(itemList);
+  return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(String(info.contractNo).replace('HĐMB','PNK'))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>Theo HĐMB số:</b> ${escapeHTML(info.contractNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span></td></tr></table>`;
+}
+function printDoc(type){
+  const errors=updateValidation(); if(errors.length){alert("Còn lỗi dữ liệu, sửa xong mới in được.\n\n"+errors.join("\n"));return}
+  const info=getInfo();
+  if(type==='hdmb') printArea.innerHTML=printHDMB(info,items);
+  if(type==='bangke') printArea.innerHTML=printBangKe(info,items);
+  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,items);
+  setTimeout(()=>window.print(),100);
+}
+function printLoaded(type){
+  if(!loadedContract){alert("Chưa mở hồ sơ");return}
+  const info=loadedContract.info||{}, itemList=loadedContract.items||[];
+  if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
+  if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList);
+  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList);
+  setTimeout(()=>window.print(),100);
+}
+render();
+</script>
+</body>
+</html>
