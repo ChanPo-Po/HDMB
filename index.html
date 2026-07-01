@@ -173,6 +173,7 @@ th{background:var(--blue);color:white;text-align:center}
         <button id="btnSave" class="btn2" onclick="saveToSheet()">💾 Lưu Google Sheet</button>
         <button id="btnHDMB" class="btn2 print-btn print-btn-main" onclick="printDoc('hdmb')">In HĐMB</button>
         <button id="btnBangKe" class="btn print-btn print-btn-main" onclick="printDoc('bangke')">In bảng kê</button>
+        <button id="btnBBBG" class="btn3 print-btn print-btn-main" onclick="printDoc('bienbanbangiao')">📦 In biên bản bàn giao</button>
         <button id="btnPNK" class="btn3 print-btn print-btn-main" onclick="printDoc('phieunhapkho')">In phiếu nhập kho 01-VT</button>
         <button class="btn4" onclick="clearAll()">Xóa toàn bộ</button>
       </div>
@@ -205,6 +206,7 @@ th{background:var(--blue);color:white;text-align:center}
       <div class="actions">
         <button class="btn2 print-btn" onclick="printLoaded('hdmb')">In lại HĐMB</button>
         <button class="btn print-btn" onclick="printLoaded('bangke')">In lại bảng kê</button>
+        <button class="btn3 print-btn" onclick="printLoaded('bienbanbangiao')">📦 In lại biên bản bàn giao</button>
         <button class="btn3 print-btn" onclick="printLoaded('phieunhapkho')">In lại phiếu nhập kho</button>
         <button class="btn-light" onclick="fillFormFromLoaded()">Đổ lại lên form sửa/in</button>
       </div>
@@ -462,6 +464,13 @@ function printBangKe(info,itemList){
   const total=sumItems(itemList);
   return `<div><b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b></div><div><b>MST:</b> 3703340710</div><div><b>Địa chỉ:</b> ${escapeHTML(info.branch)}</div><div class="doc-title">BẢNG KÊ BÀN GIAO HÀNG HÓA</div><p><b>Ngày bàn giao:</b> ${dmy(info.date)} &nbsp;&nbsp; <b>Số HĐ:</b> ${escapeHTML(info.contractNo)}</p><p><b>Người giao:</b> ${escapeHTML(info.sellerName)} &nbsp;&nbsp; <b>SĐT:</b> ${escapeHTML(info.sellerPhone)}</p><p><b>Người nhận:</b> ${escapeHTML(info.staff)} &nbsp;&nbsp; <b>Bộ phận:</b> ${escapeHTML(info.department)}</p>${bangKeTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>NGƯỜI GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>NGƯỜI NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>QUẢN LÝ / KẾ TOÁN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td></tr></table>`;
 }
+
+function printBienBanBanGiao(info,itemList){
+  const p=dateParts(info.date), total=sumItems(itemList);
+  const totalQty=itemList.reduce((s,x)=>s+Number(x.qty||0),0);
+  return `<div class="doc-center"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập – Tự do – Hạnh phúc</b><br>---------------------------</div><div class="doc-title">BIÊN BẢN BÀN GIAO MÁY THU MUA</div><div class="doc-center"><b>Số: ${escapeHTML(String(info.contractNo||'').replace('HĐMB','BBBG'))}</b></div><p>Hôm nay, ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b>, tại <b>${escapeHTML(info.branch)}</b>, chúng tôi gồm:</p><div class="doc-section-title">I. BÊN GIAO</div><p>Họ và tên: <b>${escapeHTML(info.sellerName)}</b><br>CCCD/MST số: <b>${escapeHTML(info.sellerCCCD)}</b><br>Số điện thoại: <b>${escapeHTML(info.sellerPhone)}</b><br>Địa chỉ: <b>${escapeHTML(info.sellerAddress)}</b></p><div class="doc-section-title">II. BÊN NHẬN</div><p>Đơn vị: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>Mã số thuế: <b>3703340710</b><br>Người nhận: <b>${escapeHTML(info.staff)}</b><br>Chức vụ/Bộ phận: <b>${escapeHTML(info.department)}</b><br>Số điện thoại: <b>${escapeHTML(info.staffPhone)}</b></p><div class="doc-section-title">III. DANH SÁCH THIẾT BỊ BÀN GIAO</div><table><tr><th>STT</th><th>IMEI/Serial</th><th>Dòng máy</th><th>GB</th><th>Màu</th><th>Tình trạng</th><th>SL</th><th>Giá mua</th><th>Thành tiền</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.model)}</td><td class="center">${escapeHTML(x.gb)}</td><td>${escapeHTML(x.color)}</td><td>${escapeHTML(x.condition||x.note||'')}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money((x.qty||0)*(x.price||0))}</td></tr>`).join('')}</table><p><b>Tổng số lượng máy bàn giao:</b> ${totalQty} máy</p><p><b>Tổng giá trị lô hàng:</b> ${money(total)}đ</p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><div class="doc-section-title">IV. CAM KẾT VÀ XÁC NHẬN</div><p>1. Bên giao cam kết toàn bộ thiết bị nêu trên được thu mua/chuyển nhượng hợp pháp, không phải tài sản do phạm tội mà có, không thuộc diện tranh chấp, cầm cố hoặc bị cơ quan có thẩm quyền truy tìm.</p><p>2. Bên giao chịu trách nhiệm về nguồn gốc thiết bị và các thông tin đã cung cấp liên quan đến thiết bị bàn giao.</p><p>3. Bên nhận đã kiểm đếm và tiếp nhận số lượng thiết bị thực tế theo danh sách nêu trên.</p><p>Biên bản được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p><br><table class="signature"><tr><td>BÊN GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>BÊN NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td></tr></table>`;
+}
+
 function printPNK(info,itemList){
   const p=dateParts(info.date), total=sumItems(itemList);
   return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(String(info.contractNo).replace('HĐMB','PNK'))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>Theo HĐMB số:</b> ${escapeHTML(info.contractNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span></td></tr></table>`;
@@ -472,6 +481,7 @@ function printDoc(type){
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,items);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,items);
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,items);
+  if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,items);
   setTimeout(()=>window.print(),100);
 }
 function printLoaded(type){
@@ -480,6 +490,7 @@ function printLoaded(type){
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList);
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList);
+  if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,itemList);
   setTimeout(()=>window.print(),100);
 }
 render();
