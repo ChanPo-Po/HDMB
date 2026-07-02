@@ -471,7 +471,7 @@ function handoverNo(info){
 }
 function pnkNo(info, mode){
   const no = mode === 'ctv' ? handoverNo(info) : baseContractNo(info);
-  if(/^BBBG/i.test(no)) return no.replace(/^BBBG/i,'PNK');
+  if(/^BBBG/i.test(no)) return no.replace(/^HĐMB/i,'PNK');
   if(/^HĐMB/i.test(no)) return no.replace(/^HĐMB/i,'PNK');
   if(/^HDMB/i.test(no)) return no.replace(/^HDMB/i,'PNK');
   return `PNK-${no}`;
@@ -485,8 +485,8 @@ function printBangKe(info,itemList, mode='hdmb'){
   const total = sumItems(itemList);
   const isCTV = mode === 'ctv';
   const docNo = isCTV ? handoverNo(info) : baseContractNo(info);
-  const docLabel = isCTV ? 'Số BBBG' : 'Số HĐ';
-  const title = isCTV ? 'BẢNG KÊ BÀN GIAO MÁY THU MUA TỪ CTV' : 'BẢNG KÊ BÀN GIAO HÀNG HÓA';
+  const docLabel = isCTV ? 'Số HĐMB' : 'Số HĐ';
+  const title = isCTV ? 'BẢNG KÊ BÀN GIAO HÀNG HÓA' : 'BẢNG KÊ BÀN GIAO HÀNG HÓA';
   const refText = isCTV ? `Kèm theo Biên bản bàn giao số <b>${escapeHTML(docNo)}</b> ngày <b>${dmy(info.date)}</b>` : `Kèm theo HĐMB số <b>${escapeHTML(docNo)}</b> ngày <b>${dmy(info.date)}</b>`;
   return `<div><b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b></div><div><b>MST:</b> 3703340710</div><div><b>Địa chỉ:</b> ${escapeHTML(info.branch)}</div><div class="doc-title">${title}</div><div class="doc-center">${refText}</div><p><b>Ngày bàn giao:</b> ${dmy(info.date)} &nbsp;&nbsp; <b>${docLabel}:</b> ${escapeHTML(docNo)}</p><p><b>Người giao:</b> ${escapeHTML(info.sellerName)} &nbsp;&nbsp; <b>SĐT:</b> ${escapeHTML(info.sellerPhone)}</p><p><b>Người nhận:</b> ${escapeHTML(info.staff)} &nbsp;&nbsp; <b>Bộ phận:</b> ${escapeHTML(info.department)}</p>${bangKeTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>NGƯỜI GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>NGƯỜI NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td><td>QUẢN LÝ / KẾ TOÁN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span></td></tr></table>`;
 }
