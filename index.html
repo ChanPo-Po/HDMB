@@ -257,16 +257,85 @@ function showTab(tab){
 }
 function pad(n){return String(n).padStart(2,'0')}
 function ymd(d){return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`}
-function dmy(str){
-  if(!str) return "...... / ...... / ........";
-  const [y,m,d] = String(str).split('-');
-  if(!y || !m || !d) return str;
+
+// Chuẩn hóa ngày từ Google Sheet/API về yyyy-mm-dd trước khi hiển thị hoặc in.
+// Hỗ trợ dữ liệu cũ dạng dd/mm/yyyy, yyyy-mm-dd, ISO datetime và timestamp.
+function validISODate(y,m,d){
+  const yy=Number(y), mm=Number(m), dd=Number(d);
+  if(!Number.isInteger(yy)||!Number.isInteger(mm)||!Number.isInteger(dd)||mm<1||mm>12||dd<1||dd>31) return '';
+  const test=new Date(Date.UTC(yy,mm-1,dd));
+  if(test.getUTCFullYear()!==yy||test.getUTCMonth()!==mm-1||test.getUTCDate()!==dd) return '';
+  return `${yy}-${pad(mm)}-${pad(dd)}`;
+}
+function dateInVietnam(d){
+  if(!(d instanceof Date)||Number.isNaN(d.getTime())) return '';
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(d).reduce((o,x)=>(o[x.type]=x.value,o),{});
+  return validISODate(parts.year,parts.month,parts.day);
+}
+function normalizeDateISO(value){
+  if(value === null || value === undefined || value === '') return '';
+
+  if(value instanceof Date && !Number.isNaN(value.getTime())) return dateInVietnam(value);
+
+  const raw=String(value).trim();
+  if(!raw) return '';
+
+  // Chuẩn nhập HTML hoặc API đã format sẵn: yyyy-mm-dd / yyyy/mm/dd.
+  let m=raw.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if(m) return validISODate(m[1],m[2],m[3]);
+
+  // ISO datetime do Apps Script JSON.stringify trả về thường là UTC của ngày hôm trước.
+  // Chuyển về múi giờ Việt Nam để lấy đúng ngày trên Google Sheet.
+  if(/^\d{4}-\d{1,2}-\d{1,2}T/.test(raw)){
+    const isoDate=new Date(raw);
+    const vnDate=dateInVietnam(isoDate);
+    if(vnDate) return vnDate;
+  }
+
+  // Dữ liệu hiển thị từ Sheet: dd/mm/yyyy, dd-mm-yyyy hoặc dd.mm.yyyy.
+  m=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:[T\s].*)?$/);
+  if(m){
+    const vn=validISODate(m[3],m[2],m[1]);
+    if(vn) return vn;
+  }
+
+  // Chuỗi yyyy-mm-dd kèm giờ nhưng không có ký hiệu T/múi giờ.
+  m=raw.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})[\s].*$/);
+  if(m){
+    const plain=validISODate(m[1],m[2],m[3]);
+    if(plain) return plain;
+  }
+
+  // Timestamp mili-giây/giây nếu API cũ từng trả dạng số.
+  if(/^\d{10,13}$/.test(raw)){
+    const n=Number(raw.length===10 ? raw+'000' : raw);
+    const fromTimestamp=dateInVietnam(new Date(n));
+    if(fromTimestamp) return fromTimestamp;
+  }
+
+  // Chuỗi ngày khác: phương án dự phòng cuối cùng, vẫn quy về múi giờ Việt Nam.
+  return dateInVietnam(new Date(raw));
+}
+function dmy(value){
+  const iso=normalizeDateISO(value);
+  if(!iso) return value ? String(value) : "...... / ...... / ........";
+  const [y,m,d]=iso.split('-');
   return `${d}/${m}/${y}`;
 }
-function dateParts(str){
-  if(!str) return {d:'……',m:'……',y:'………'};
-  const [y,m,d] = String(str).split('-');
-  return {d:d||'……',m:m||'……',y:y||'………'};
+function dateParts(value){
+  const iso=normalizeDateISO(value);
+  if(!iso) return {d:'……',m:'……',y:'………'};
+  const [y,m,d]=iso.split('-');
+  return {d,m,y};
+}
+function normalizeLoadedInfo(info={}){
+  return {
+    ...info,
+    date:normalizeDateISO(info.dateISO || info.date),
+    sellerIssueDate:normalizeDateISO(info.sellerIssueDateISO || info.sellerIssueDate)
+  };
 }
 function parseMoney(v){return Number(String(v || '').replace(/\./g,'').replace(/,/g,'').replace(/[^\d]/g,'')) || 0}
 function money(n){return Number(n || 0).toLocaleString("vi-VN")}
@@ -422,7 +491,7 @@ async function searchContracts(){
 }
 function renderSearchResults(rows){
   if(!rows.length){searchResults.innerHTML=`<tr><td colspan="7" class="center">Không tìm thấy hồ sơ</td></tr>`;return}
-  searchResults.innerHTML=rows.map(r=>`<tr><td><b>${escapeHTML(r.contractNo)}</b></td><td>${escapeHTML(r.date)}</td><td>${escapeHTML(r.sellerName)}</td><td>${escapeHTML(r.sellerPhone)}</td><td class="center">${escapeHTML(r.totalQty)}</td><td class="right">${money(r.totalAmount)}</td><td class="center"><button class="btn-light" onclick="loadContract('${escapeHTML(r.contractNo)}')">Mở / In lại</button></td></tr>`).join('');
+  searchResults.innerHTML=rows.map(r=>`<tr><td><b>${escapeHTML(r.contractNo)}</b></td><td>${escapeHTML(dmy(r.dateISO||r.date))}</td><td>${escapeHTML(r.sellerName)}</td><td>${escapeHTML(r.sellerPhone)}</td><td class="center">${escapeHTML(r.totalQty)}</td><td class="right">${money(r.totalAmount)}</td><td class="center"><button class="btn-light" onclick="loadContract('${escapeHTML(r.contractNo)}')">Mở / In lại</button></td></tr>`).join('');
 }
 async function loadContract(contractNoValue){
   toast("Đang mở hồ sơ...");
@@ -430,20 +499,21 @@ async function loadContract(contractNoValue){
     const res=await api("getContract", { contractNo:contractNoValue });
     const data=res&&res.data?res.data:res;
     if(!data||!data.info){alert("Không tìm thấy hồ sơ");return}
-    loadedContract=data;
-    loadedContractNo.innerText=data.info.contractNo;
-    loadedTotalQty.innerText=money(data.info.totalQty||(data.items||[]).reduce((s,x)=>s+Number(x.qty||0),0));
-    loadedTotal.innerText=money(data.info.totalAmount||(data.items||[]).reduce((s,x)=>s+Number(x.amount||0),0));
-    loadedSeller.innerText=data.info.sellerName||"---";
+    loadedContract={...data, info:normalizeLoadedInfo(data.info)};
+    const loadedInfo=loadedContract.info;
+    loadedContractNo.innerText=loadedInfo.contractNo;
+    loadedTotalQty.innerText=money(loadedInfo.totalQty||(loadedContract.items||[]).reduce((s,x)=>s+Number(x.qty||0),0));
+    loadedTotal.innerText=money(loadedInfo.totalAmount||(loadedContract.items||[]).reduce((s,x)=>s+Number(x.amount||0),0));
+    loadedSeller.innerText=loadedInfo.sellerName||"---";
     loadedContractBox.classList.remove('hidden'); toast("✅ Đã mở hồ sơ.");
   }catch(err){alert("Lỗi mở hồ sơ: "+err.message)}
 }
 function fillFormFromLoaded(){
   if(!loadedContract){alert("Chưa mở hồ sơ");return}
-  const info=loadedContract.info||{};
-  contractNo.value=info.contractNo||""; date.value=info.dateISO||info.date||"";
+  const info=normalizeLoadedInfo(loadedContract.info||{});
+  contractNo.value=info.contractNo||""; date.value=info.date||"";
   sellerName.value=info.sellerName||""; sellerPhone.value=info.sellerPhone||""; sellerCCCD.value=info.sellerCCCD||""; sellerAddress.value=info.sellerAddress||"";
-  sellerIssueDate.value=info.sellerIssueDateISO||info.sellerIssueDate||""; sellerIssuePlace.value=info.sellerIssuePlace||"";
+  sellerIssueDate.value=info.sellerIssueDate||""; sellerIssuePlace.value=info.sellerIssuePlace||"";
   payment.value=info.payment||"Tiền mặt"; staff.value=info.staff||""; staffPhone.value=info.staffPhone||""; department.value=info.department||"Nhân viên kho"; branch.value=info.branch||branch.value;
   items=(loadedContract.items||[]).map(x=>({imei:x.imei||"",model:x.model||"",gb:x.gb||"",color:x.color||"",condition:x.condition||"Máy cũ, đã qua sử dụng",unit:x.unit||"Máy",qty:Number(x.qty||1),price:Number(x.price||0),note:x.note||""}));
   saveDraft(); render(); showTab('create');
@@ -512,7 +582,7 @@ function printDoc(type){
 }
 function printLoaded(type){
   if(!loadedContract){alert("Chưa mở hồ sơ");return}
-  const info=loadedContract.info||{}, itemList=loadedContract.items||[];
+  const info=normalizeLoadedInfo(loadedContract.info||{}), itemList=loadedContract.items||[];
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList,'hdmb');
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList,'hdmb');
