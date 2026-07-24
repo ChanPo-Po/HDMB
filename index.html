@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POPOPHONE - HỒ SƠ HĐMB V2 NETLIFY</title>
+<title>POPOPHONE - HỒ SƠ HĐMB V3 FIX NGÀY & SĐT/CCCD</title>
 
 <style>
 :root{
@@ -39,6 +39,7 @@ input,select,textarea,button{font-family:Arial,Helvetica,sans-serif;font-size:14
 input,select,textarea{padding:11px 10px;border:1px solid #ccd6e2;border-radius:8px;background:#fff}
 input::placeholder,textarea::placeholder{color:#9aa6b2}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px #0b55a015}
+input.input-error,select.input-error,textarea.input-error{border-color:var(--red)!important;background:#fff5f6!important;box-shadow:0 0 0 3px #dc35451a!important}
 textarea{min-height:72px;resize:vertical}
 button{border:none;cursor:pointer;font-weight:800;transition:.12s}
 button:hover{opacity:.92;transform:translateY(-1px)}
@@ -103,7 +104,7 @@ th{background:var(--blue);color:white;text-align:center}
   </div>
 
   <div class="api-note">
-    Chỉ lưu hành nội bộ
+    Chỉ lưu hành nội bộ • Bản V3 FIX NGÀY + SĐT/CCCD 24/07/2026
   </div>
 
   <div class="tabs">
@@ -116,8 +117,8 @@ th{background:var(--blue);color:white;text-align:center}
       <h3>Thông tin người bán / người giao</h3>
       <div class="grid">
         <div class="field"><label>Họ và tên người bán *</label><input id="sellerName" placeholder="VD: Nguyễn Ngọc Hải" oninput="updateValidation()"><div class="hint">Nhập đúng tên trên CCCD / giấy tờ.</div></div>
-        <div class="field"><label>Số điện thoại người bán *</label><input id="sellerPhone" placeholder="VD: 0395 489 564"></div>
-        <div class="field"><label>Số CCCD / MST người bán</label><input id="sellerCCCD" placeholder="VD: 056095001983"></div>
+        <div class="field"><label>Số điện thoại người bán *</label><input id="sellerPhone" type="text" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="VD: 0395489564" oninput="handleIdentifierInput(this,10)"></div>
+        <div class="field"><label>Số CCCD / MST người bán</label><input id="sellerCCCD" type="text" inputmode="numeric" maxlength="13" placeholder="CCCD 12 số hoặc MST 10/13 số" oninput="handleIdentifierInput(this,13)"></div>
         <div class="field"><label>Địa chỉ người bán</label><input id="sellerAddress" placeholder="VD: TP.Hồ Chí Minh"></div>
         <div class="field"><label>Ngày cấp CCCD</label><input id="sellerIssueDate" type="date"><div class="hint">Chọn ngày ghi trên CCCD.</div></div>
         <div class="field"><label>Nơi cấp CCCD</label><input id="sellerIssuePlace" placeholder="VD: Cục Cảnh sát QLHC về TTXH"></div>
@@ -131,7 +132,7 @@ th{background:var(--blue);color:white;text-align:center}
       <div class="grid">
         <div class="field"><label>Hình thức thanh toán *</label><select id="payment"><option>Tiền mặt</option><option>Chuyển khoản</option><option>Công nợ</option></select></div>
         <div class="field"><label>Người nhận *</label><input id="staff" placeholder="VD: Nguyễn Phạm Công Trường" oninput="updateValidation()"></div>
-        <div class="field"><label>SĐT người nhận / đại diện *</label><input id="staffPhone" placeholder="VD: 0877 067 485" oninput="updateValidation()"></div>
+        <div class="field"><label>SĐT người nhận / đại diện *</label><input id="staffPhone" type="text" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="VD: 0877067485" oninput="handleIdentifierInput(this,10)"></div>
         <div class="field"><label>Chức vụ / bộ phận</label><input id="department" placeholder="VD: Nhân viên kho" value="Nhân viên kho"></div>
         <div class="field field-full"><label>Chi nhánh / kho nhập *</label><input id="branch" placeholder="VD: 113 Yersin..." value="113 Yersin, KP.Phú Cường 1, P.Thủ Dầu Một, TP.Hồ Chí Minh"></div>
       </div>
@@ -226,11 +227,18 @@ const API_URL = "/.netlify/functions/hdmb-api";
 
 let items = JSON.parse(localStorage.getItem("po_hdmb_v2_draft_items") || "[]");
 let loadedContract = null;
+let identifierReview = {
+  sellerPhone:false,
+  sellerCCCD:false,
+  staffPhone:false
+};
 document.getElementById("date").valueAsDate = new Date();
 
 async function api(action, data = {}){
   const res = await fetch(API_URL, {
     method: "POST",
+    cache: "no-store",
+    headers: {"Content-Type":"application/json"},
     body: JSON.stringify({ action, ...data })
   });
 
@@ -330,11 +338,78 @@ function dateParts(value){
   const [y,m,d]=iso.split('-');
   return {d,m,y};
 }
+function firstValue(...values){
+  for(const value of values){
+    if(value !== undefined && value !== null && String(value).trim() !== '') return value;
+  }
+  return '';
+}
+function digitsOnly(value){
+  return String(value ?? '').replace(/^'/,'').replace(/\D/g,'');
+}
+function recoverLoadedPhone(value){
+  const digits=digitsOnly(value);
+  return digits.length===9 ? `0${digits}` : digits;
+}
+function recoverLoadedDocument(value){
+  const digits=digitsOnly(value);
+  // Hồ sơ cũ thường bị mất đúng 1 số 0 đầu của CCCD 12 số.
+  // Không tự pad dữ liệu 10 số vì có thể đó là mã số thuế hợp lệ.
+  return digits.length===11 ? `0${digits}` : digits;
+}
+function isValidPhone(value){
+  return /^0\d{9}$/.test(digitsOnly(value));
+}
+function isValidSellerDocument(value){
+  const digits=digitsOnly(value);
+  return !digits || digits.length===10 || digits.length===12 || digits.length===13;
+}
+function handleIdentifierInput(input,maxLength){
+  input.value=digitsOnly(input.value).slice(0,maxLength);
+  if(Object.prototype.hasOwnProperty.call(identifierReview,input.id)){
+    identifierReview[input.id]=false;
+  }
+  updateValidation();
+}
 function normalizeLoadedInfo(info={}){
+  const rawSellerPhone=firstValue(info.sellerPhone,info.SDT,info.SDT_NGUOI_BAN,info.phone);
+  const rawSellerCCCD=firstValue(info.sellerCCCD,info.CCCD,info.CCCD_MST,info.taxCode);
+  const rawStaffPhone=firstValue(info.staffPhone,info.SDT_NGUOI_NHAN,info.staff_phone);
+
+  const sellerPhoneValue=recoverLoadedPhone(rawSellerPhone);
+  const sellerCCCDValue=recoverLoadedDocument(rawSellerCCCD);
+  const staffPhoneValue=recoverLoadedPhone(rawStaffPhone);
+
   return {
     ...info,
-    date:normalizeDateISO(info.dateISO || info.date),
-    sellerIssueDate:normalizeDateISO(info.sellerIssueDateISO || info.sellerIssueDate)
+    contractNo:firstValue(info.contractNo,info.SO_HD,info.soHD),
+    date:normalizeDateISO(firstValue(info.dateISO,info.date,info.NGAY_LAP)),
+    sellerName:firstValue(info.sellerName,info.HO_TEN,info.TEN_NGUOI_BAN),
+    sellerPhone:sellerPhoneValue,
+    sellerCCCD:sellerCCCDValue,
+    sellerAddress:firstValue(info.sellerAddress,info.DIA_CHI),
+    sellerIssueDate:normalizeDateISO(firstValue(info.sellerIssueDateISO,info.sellerIssueDate,info.NGAY_CAP)),
+    sellerIssuePlace:firstValue(info.sellerIssuePlace,info.NOI_CAP),
+    staff:firstValue(info.staff,info.NGUOI_NHAN),
+    staffPhone:staffPhoneValue,
+    department:firstValue(info.department,info.BO_PHAN),
+    branch:firstValue(info.branch,info.CHI_NHANH),
+    payment:firstValue(info.payment,info.THANH_TOAN),
+    _sellerPhoneNeedsReview:Boolean(info._sellerPhoneNeedsReview) || (Boolean(rawSellerPhone) && (
+      typeof rawSellerPhone === 'number' ||
+      digitsOnly(rawSellerPhone).length===9 ||
+      !isValidPhone(sellerPhoneValue)
+    )),
+    _sellerCCCDNeedsReview:Boolean(info._sellerCCCDNeedsReview) || (Boolean(rawSellerCCCD) && (
+      typeof rawSellerCCCD === 'number' ||
+      digitsOnly(rawSellerCCCD).length===11 ||
+      !isValidSellerDocument(sellerCCCDValue)
+    )),
+    _staffPhoneNeedsReview:Boolean(info._staffPhoneNeedsReview) || (Boolean(rawStaffPhone) && (
+      typeof rawStaffPhone === 'number' ||
+      digitsOnly(rawStaffPhone).length===9 ||
+      !isValidPhone(staffPhoneValue)
+    ))
   };
 }
 function parseMoney(v){return Number(String(v || '').replace(/\./g,'').replace(/,/g,'').replace(/[^\d]/g,'')) || 0}
@@ -377,9 +452,9 @@ function moneyToWords(n){
 function getInfo(){
   return {
     contractNo:getContractNo(), date:date.value,
-    sellerName:sellerName.value.trim(), sellerPhone:sellerPhone.value.trim(), sellerCCCD:sellerCCCD.value.trim(),
+    sellerName:sellerName.value.trim(), sellerPhone:digitsOnly(sellerPhone.value), sellerCCCD:digitsOnly(sellerCCCD.value),
     sellerAddress:sellerAddress.value.trim(), sellerIssueDate:sellerIssueDate.value, sellerIssuePlace:sellerIssuePlace.value.trim(),
-    payment:payment.value, staff:staff.value.trim(), staffPhone:staffPhone.value.trim(), department:department.value.trim(), branch:branch.value.trim(),
+    payment:payment.value, staff:staff.value.trim(), staffPhone:digitsOnly(staffPhone.value), department:department.value.trim(), branch:branch.value.trim(),
     totalQty:totalQuantity(), totalAmount:totalAmount(), totalWords:moneyToWords(totalAmount())
   };
 }
@@ -391,6 +466,46 @@ function buildPayload(){
       qty:Number(x.qty||0), price:Number(x.price||0), amount:Number(x.qty||0)*Number(x.price||0), note:x.note
     }))
   };
+}
+function identifierValidation(){
+  const errors=[];
+  const invalidIds=[];
+
+  const sellerPhoneValue=digitsOnly(sellerPhone.value);
+  const sellerCCCDValue=digitsOnly(sellerCCCD.value);
+  const staffPhoneValue=digitsOnly(staffPhone.value);
+
+  if(!sellerPhoneValue){
+    errors.push('Chưa nhập SĐT người bán.');
+    invalidIds.push('sellerPhone');
+  }else if(!isValidPhone(sellerPhoneValue)){
+    errors.push('SĐT người bán phải đủ 10 số và bắt đầu bằng số 0.');
+    invalidIds.push('sellerPhone');
+  }else if(identifierReview.sellerPhone){
+    errors.push('SĐT người bán lấy từ hồ sơ cũ có nguy cơ đã mất số 0. Hãy kiểm tra và nhập lại/xác nhận.');
+    invalidIds.push('sellerPhone');
+  }
+
+  if(sellerCCCDValue && !isValidSellerDocument(sellerCCCDValue)){
+    errors.push('CCCD phải đủ 12 số; MST phải đủ 10 hoặc 13 số.');
+    invalidIds.push('sellerCCCD');
+  }else if(sellerCCCDValue && identifierReview.sellerCCCD){
+    errors.push('CCCD/MST lấy từ hồ sơ cũ có nguy cơ đã mất số 0. Hãy kiểm tra và nhập lại/xác nhận.');
+    invalidIds.push('sellerCCCD');
+  }
+
+  if(!staffPhoneValue){
+    errors.push('Chưa nhập SĐT người nhận / đại diện.');
+    invalidIds.push('staffPhone');
+  }else if(!isValidPhone(staffPhoneValue)){
+    errors.push('SĐT người nhận / đại diện phải đủ 10 số và bắt đầu bằng số 0.');
+    invalidIds.push('staffPhone');
+  }else if(identifierReview.staffPhone){
+    errors.push('SĐT người nhận lấy từ hồ sơ cũ có nguy cơ đã mất số 0. Hãy kiểm tra và nhập lại/xác nhận.');
+    invalidIds.push('staffPhone');
+  }
+
+  return {errors,invalidIds:[...new Set(invalidIds)]};
 }
 function validateItems(){
   const errors=[];
@@ -408,10 +523,16 @@ function validateItems(){
   if(items.length>0&&totalAmount()<=0) errors.push('Tổng tiền = 0, kiểm tra lại đơn giá.');
   if(!sellerName.value.trim()) errors.push('Chưa nhập họ tên người bán.');
   if(!staff.value.trim()) errors.push('Chưa nhập người đại diện giao dịch / người nhận.');
-  if(!staffPhone.value.trim()) errors.push('Chưa nhập SĐT người nhận / đại diện.');
+  errors.push(...identifierValidation().errors);
   return errors;
 }
 function updateValidation(extraErrors=[]){
+  const identifierState=identifierValidation();
+  ['sellerPhone','sellerCCCD','staffPhone'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('input-error',identifierState.invalidIds.includes(id));
+  });
+
   const errors=validateItems().concat(extraErrors||[]);
   const box=document.getElementById('validationBox');
   const printButtons=document.querySelectorAll('.print-btn-main');
@@ -441,6 +562,7 @@ function removeItem(i){items.splice(i,1); saveDraft(); render()}
 function clearAll(){
   if(confirm("Xóa toàn bộ form và danh sách máy?")){
     items=[]; saveDraft();
+    identifierReview={sellerPhone:false,sellerCCCD:false,staffPhone:false};
     sellerName.value=sellerPhone.value=sellerCCCD.value=sellerAddress.value=sellerIssueDate.value=sellerIssuePlace.value=contractNo.value="";
     staff.value=staffPhone.value=""; department.value="Nhân viên kho"; payment.value="Tiền mặt"; document.getElementById("date").valueAsDate=new Date();
     render();
@@ -511,12 +633,20 @@ async function loadContract(contractNoValue){
 function fillFormFromLoaded(){
   if(!loadedContract){alert("Chưa mở hồ sơ");return}
   const info=normalizeLoadedInfo(loadedContract.info||{});
+  identifierReview={
+    sellerPhone:Boolean(info._sellerPhoneNeedsReview),
+    sellerCCCD:Boolean(info._sellerCCCDNeedsReview),
+    staffPhone:Boolean(info._staffPhoneNeedsReview)
+  };
   contractNo.value=info.contractNo||""; date.value=info.date||"";
   sellerName.value=info.sellerName||""; sellerPhone.value=info.sellerPhone||""; sellerCCCD.value=info.sellerCCCD||""; sellerAddress.value=info.sellerAddress||"";
   sellerIssueDate.value=info.sellerIssueDate||""; sellerIssuePlace.value=info.sellerIssuePlace||"";
   payment.value=info.payment||"Tiền mặt"; staff.value=info.staff||""; staffPhone.value=info.staffPhone||""; department.value=info.department||"Nhân viên kho"; branch.value=info.branch||branch.value;
   items=(loadedContract.items||[]).map(x=>({imei:x.imei||"",model:x.model||"",gb:x.gb||"",color:x.color||"",condition:x.condition||"Máy cũ, đã qua sử dụng",unit:x.unit||"Máy",qty:Number(x.qty||1),price:Number(x.price||0),note:x.note||""}));
   saveDraft(); render(); showTab('create');
+  if(Object.values(identifierReview).some(Boolean)){
+    toast("🔴 Hồ sơ cũ có SĐT/CCCD cần kiểm tra lại trước khi in hoặc lưu.");
+  }
 }
 
 function hdmbTable(itemList){
@@ -583,6 +713,11 @@ function printDoc(type){
 function printLoaded(type){
   if(!loadedContract){alert("Chưa mở hồ sơ");return}
   const info=normalizeLoadedInfo(loadedContract.info||{}), itemList=loadedContract.items||[];
+  if(info._sellerPhoneNeedsReview||info._sellerCCCDNeedsReview||info._staffPhoneNeedsReview){
+    alert("Hồ sơ cũ có SĐT/CCCD có nguy cơ đã mất số 0. Hệ thống sẽ đổ dữ liệu lên form và tô đỏ để kiểm tra trước khi in.");
+    fillFormFromLoaded();
+    return;
+  }
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList,'hdmb');
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList,'hdmb');
