@@ -77,17 +77,6 @@ th{background:var(--blue);color:white;text-align:center}
 
 @media print{
   @page{size:A4;margin:12mm}
-  @page bangkeLandscape{size:A4 landscape;margin:8mm}
-  .bangke-02tndn{page:bangkeLandscape;font-size:11px;line-height:1.2}
-  .bangke-02tndn .bk-small{font-size:10.5px}
-  .bangke-02tndn .bk-title{text-align:center;font-weight:bold;font-size:15px;margin:16px 0 0}
-  .bangke-02tndn .bk-subtitle{text-align:center;font-weight:bold;font-size:14px}
-  .bangke-02tndn .bk-date{text-align:center;font-style:italic;margin-bottom:12px}
-  .bangke-02tndn .bk-info{line-height:1.55;margin-bottom:4px}
-  .bangke-02tndn table.bk-table{table-layout:fixed}
-  .bangke-02tndn table.bk-table th,.bangke-02tndn table.bk-table td{padding:3px 4px;font-size:10px;vertical-align:middle}
-  .bangke-02tndn .bk-sign td{border:none!important;height:86px;text-align:center;vertical-align:top;font-weight:bold}
-  .bangke-02tndn .bk-note{font-size:9.5px;font-style:italic;line-height:1.35;margin-top:8px}
   body{background:white}
   body *{visibility:hidden}
   .print-area,.print-area *{visibility:visible}
@@ -104,7 +93,23 @@ th{background:var(--blue);color:white;text-align:center}
   .no-border,.no-border td{border:none!important}
   .signature td{height:88px;text-align:center;vertical-align:top;border:none!important;font-weight:bold}
   .page-break{page-break-before:always}
+  .bangke-02{page:bangke02;font-size:12px;line-height:1.22}
+  .bangke-02 .bk-top{text-align:right;font-size:11.5px;line-height:1.18;margin-bottom:14px}
+  .bangke-02 .bk-title{text-align:center;font-weight:bold;font-size:16px;line-height:1.15;margin:4px 0 2px}
+  .bangke-02 .bk-date{text-align:center;font-style:italic;font-size:12px;margin-bottom:16px}
+  .bangke-02 .bk-info{font-size:12px;line-height:1.45;margin-bottom:2px}
+  .bangke-02 table.bk-table{table-layout:fixed;margin-top:2px}
+  .bangke-02 .bk-table th,.bangke-02 .bk-table td{padding:4px 3px;font-size:10.5px;line-height:1.12;vertical-align:middle}
+  .bangke-02 .bk-table td{height:26px}
+  .bangke-02 .bk-col-date{width:7%}.bangke-02 .bk-col-name{width:12%}.bangke-02 .bk-col-address{width:16%}.bangke-02 .bk-col-cccd{width:10%}.bangke-02 .bk-col-phone{width:9%}.bangke-02 .bk-col-item{width:16%}.bangke-02 .bk-col-qty{width:7%}.bangke-02 .bk-col-price{width:9%}.bangke-02 .bk-col-total{width:10%}.bangke-02 .bk-col-note{width:8%}
+  .bangke-02 .bk-total{margin-top:14px;font-size:12px}
+  .bangke-02 .bk-sign{margin-top:26px;width:100%;display:grid;grid-template-columns:1fr 1.5fr;gap:80px;text-align:center;font-size:12px}
+  .bangke-02 .bk-sign .role{font-weight:bold;margin-top:5px}
+  .bangke-02 .bk-sign .person{font-weight:bold;margin-top:48px}
+  .bangke-02 .bk-notes{margin-top:48px;font-size:11.5px;line-height:1.3;font-style:italic}
+  .bangke-02 .bk-notes b{font-style:italic}
 }
+@page bangke02{size:A4 landscape;margin:8mm}
 </style>
 </head>
 
@@ -687,17 +692,14 @@ function printHDMB(info,itemList){
   return `<div class="doc-center"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập – Tự do – Hạnh phúc</b></div><div class="doc-title">HỢP ĐỒNG MUA BÁN ĐIỆN THOẠI CŨ</div><div class="doc-center"><b>Số: ${escapeHTML(info.contractNo)}</b></div><p>Căn cứ Bộ luật Dân sự năm 2015;</p><p>Căn cứ nhu cầu và sự thỏa thuận giữa các bên.</p><p>Hôm nay, ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b>, tại POPOPHONE, chúng tôi gồm có:</p><div class="doc-section-title">BÊN BÁN (BÊN A)</div><p>Họ và tên: <b>${escapeHTML(info.sellerName)}</b></p><p>CMND/CCCD số: <b>${escapeHTML(info.sellerCCCD)}</b></p><p>Ngày cấp: <b>${dmy(info.sellerIssueDate)}</b> &nbsp;&nbsp; Nơi cấp: <b>${escapeHTML(info.sellerIssuePlace)}</b></p><p>Số điện thoại: <b>${escapeHTML(info.sellerPhone)}</b></p><p>Địa chỉ: <b>${escapeHTML(info.sellerAddress)}</b></p><div class="doc-section-title">BÊN MUA (BÊN B)</div><p>Tên hộ kinh doanh: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b></p><p>Mã số thuế: <b>3703340710</b></p><p>Người đại diện giao dịch: <b>${escapeHTML(info.staff)}</b></p><p>Chức vụ: <b>${escapeHTML(info.department)}</b></p><p>Số điện thoại: <b>${escapeHTML(info.staffPhone)}</b></p><div class="doc-section-title">ĐIỀU 1. ĐỐI TƯỢNG HỢP ĐỒNG</div><p>Bên A đồng ý bán và Bên B đồng ý mua các thiết bị điện thoại di động đã qua sử dụng theo danh sách chi tiết tại Phụ lục 01 đính kèm hợp đồng này.</p><p>Bên A xác nhận các thiết bị bán cho Bên B không phải tài sản phạm pháp, nếu phát sinh tranh chấp pháp lý Bên A hoàn toàn chịu trách nhiệm.</p><div class="doc-section-title">ĐIỀU 2. GIÁ TRỊ HỢP ĐỒNG VÀ THANH TOÁN</div><p>Tổng giá trị hợp đồng: <b>${money(total)}đ</b></p><p>(Bằng chữ: <b>${moneyToWords(total)}</b>)</p><p>Phương thức thanh toán: ${paymentChecks(info.payment)}</p><p>Thời điểm thanh toán: Ngay khi hoàn tất việc bàn giao và kiểm tra máy.</p><div class="doc-section-title">ĐIỀU 3. GIAO NHẬN HÀNG</div><p>Địa điểm giao nhận: <b>${escapeHTML(info.branch)}</b></p><p>Thời gian giao nhận: Ngày <b>${dmy(info.date)}</b></p><p>Hai bên sẽ lập Phiếu nhập kho hoặc Biên bản giao nhận để xác nhận việc bàn giao thiết bị.</p><div class="doc-section-title">ĐIỀU 4. CAM KẾT CỦA BÊN BÁN</div><p>1. Thiết bị bán là tài sản hợp pháp, không phải hàng trộm cắp hoặc tranh chấp.</p><p>2. Cung cấp đúng số lượng, đúng IMEI và tình trạng máy như phụ lục.</p><p>3. Chịu trách nhiệm nếu phát sinh tranh chấp về nguồn gốc thiết bị.</p><div class="doc-section-title">ĐIỀU 5. CAM KẾT CỦA BÊN MUA</div><p>1. Thanh toán đầy đủ và đúng hạn.</p><p>2. Kiểm tra IMEI, số lượng và tình trạng máy ngay khi nhận hàng.</p><div class="doc-section-title">ĐIỀU 6. GIẢI QUYẾT TRANH CHẤP</div><p>Hai bên ưu tiên giải quyết tranh chấp bằng thương lượng. Nếu không đạt được thỏa thuận, tranh chấp sẽ được giải quyết tại Tòa án nhân dân có thẩm quyền.</p><div class="doc-section-title">ĐIỀU 7. ĐIỀU KHOẢN CHUNG</div><p>Hợp đồng có hiệu lực kể từ ngày ký.</p><p>Hợp đồng được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p><table class="signature"><tr><td>ĐẠI DIỆN BÊN BÁN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>ĐẠI DIỆN BÊN MUA<br><span style="font-weight:normal">(Ký, ghi rõ họ tên, đóng dấu nếu có)</span><br><br><b>${escapeHTML(info.staff)}</b></td></tr></table><div class="page-break"></div><div class="doc-title">PHỤ LỤC 01 – DANH SÁCH THIẾT BỊ</div><div class="doc-center">(Kèm theo Hợp đồng số <b>${escapeHTML(info.contractNo)}</b> ngày <b>${dmy(info.date)}</b>)</div><br>${hdmbTable(itemList)}`;
 }
 function printBangKe(info,itemList, mode='hdmb'){
-  // Mẫu 02/TNDN – dùng chung cho nút Bảng kê HĐMB và Bảng kê CTV.
-  // Chỉ thay mẫu in; dữ liệu vẫn bám đúng info/itemList của source hiện tại.
   const total = sumItems(itemList);
   const p = dateParts(info.date);
-  const companyAddress = '113 Yersin, Khu phố Phú Cường, Phường Thủ Dầu Một, TP.Hồ Chí Minh';
-  const purchaseAddress = companyAddress;
-  const itemName = x => {
+  const itemName = (x) => {
     const model = String(x.model || '').trim();
     const gb = String(x.gb || '').trim();
+    const spec = [model, gb].filter(Boolean).join(' ');
     const imei = String(x.imei || '').trim();
-    return `Điện thoại iPhone ${model}${gb ? ' ' + gb + 'GB' : ''}${imei ? ' - IMEI ' + imei : ''}`;
+    return `Điện thoại iPhone ${spec}${imei ? ` - IMEI ${imei}` : ''}`.trim();
   };
   const rows = itemList.map(x=>`<tr>
     <td class="center">${escapeHTML(dmy(info.date))}</td>
@@ -706,42 +708,37 @@ function printBangKe(info,itemList, mode='hdmb'){
     <td class="center">${escapeHTML(info.sellerCCCD)}</td>
     <td class="center">${escapeHTML(info.sellerPhone)}</td>
     <td>${escapeHTML(itemName(x))}</td>
-    <td class="center">${Number(x.qty||1)}</td>
+    <td class="center">${escapeHTML(x.qty || 1)}</td>
     <td class="right">${money(x.price)}</td>
-    <td class="right">${money(Number(x.qty||1)*Number(x.price||0))}</td>
-    <td>${escapeHTML(x.note||'')}</td>
+    <td class="right">${money((x.qty||0)*(x.price||0))}</td>
+    <td>${escapeHTML(x.note || x.condition || '')}</td>
   </tr>`).join('');
-  const blankRows = Math.max(0, 2-itemList.length);
-  const blanks = Array.from({length:blankRows},()=>`<tr>${'<td>&nbsp;</td>'.repeat(10)}</tr>`).join('');
-  return `<div class="bangke-02tndn">
-    <div class="doc-right bk-small">Mẫu số: 02/TNDN</div>
-    <div class="doc-center bk-small">(Ban hành kèm theo Thông tư số 20/2026/TT-BTC của Bộ trưởng Bộ Tài chính)</div>
-    <div class="bk-title">BẢNG KÊ THU MUA HÀNG HÓA, DỊCH VỤ</div>
-    <div class="bk-subtitle">KHÔNG CÓ HÓA ĐƠN</div>
+  return `<div class="bangke-02">
+    <div class="bk-top">Mẫu số: 02/TNDN<br>(Ban hành kèm theo Thông tư số 20/2026/TT-BTC của Bộ trưởng Bộ Tài chính)</div>
+    <div class="bk-title">BẢNG KÊ THU MUA HÀNG HÓA, DỊCH VỤ<br>KHÔNG CÓ HÓA ĐƠN</div>
     <div class="bk-date">(Ngày ${p.d} tháng ${p.m} năm ${p.y})</div>
-    <div class="bk-info">
-      - Tên doanh nghiệp: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>
-      - Mã số thuế: <b>3703340710</b><br>
-      - Địa chỉ: ${escapeHTML(companyAddress)}<br>
-      - Số điện thoại: ............................................................<br>
-      - Địa chỉ nơi tổ chức thu mua: ${escapeHTML(purchaseAddress)}
-    </div>
+    <div class="bk-info">- Tên doanh nghiệp: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>
+    - Mã số thuế: <b>3703340710</b><br>
+    - Địa chỉ: ${escapeHTML(info.branch)}<br>
+    - Số điện thoại:<br>
+    - Địa chỉ nơi tổ chức thu mua: ${escapeHTML(info.branch)}</div>
     <table class="bk-table">
-      <colgroup><col style="width:7%"><col style="width:11%"><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:15%"><col style="width:7%"><col style="width:8%"><col style="width:9%"><col style="width:8%"></colgroup>
+      <colgroup><col class="bk-col-date"><col class="bk-col-name"><col class="bk-col-address"><col class="bk-col-cccd"><col class="bk-col-phone"><col class="bk-col-item"><col class="bk-col-qty"><col class="bk-col-price"><col class="bk-col-total"><col class="bk-col-note"></colgroup>
       <tr><th rowspan="2">Ngày tháng<br>năm mua<br>hàng</th><th colspan="4">Người bán</th><th colspan="4">Hàng hóa, dịch vụ mua vào</th><th rowspan="2">Ghi chú</th></tr>
       <tr><th>Tên người bán</th><th>Địa chỉ</th><th>Số căn cước</th><th>Số điện thoại<br>(nếu có)</th><th>Tên hàng hóa, dịch vụ</th><th>Số lượng,<br>trọng lượng</th><th>Đơn giá</th><th>Tổng giá thanh toán</th></tr>
-      <tr>${Array.from({length:10},(_,i)=>`<td class="center">${i+1}</td>`).join('')}</tr>
-      ${rows}${blanks}
+      <tr><td class="center">1</td><td class="center">2</td><td class="center">3</td><td class="center">4</td><td class="center">5</td><td class="center">6</td><td class="center">7</td><td class="center">8</td><td class="center">9</td><td class="center">10</td></tr>
+      ${rows || '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'}
+      <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
     </table>
-    <p>- Tổng giá trị hàng hóa, dịch vụ mua vào: <b>${money(total)} đồng</b></p>
-    <table class="bk-sign"><tr>
-      <td style="width:45%">Người lập bảng kê<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff||'')}</b></td>
-      <td style="width:55%"><i>Ngày ${p.d} tháng ${p.m} năm ${p.y}</i><br>Người đại diện hoặc người được ủy quyền của doanh nghiệp<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>........................................................</b></td>
-    </tr></table>
-    <div class="bk-note"><b>Ghi chú:</b><br>
-      - Căn cứ vào sổ thực tế các hàng hóa, dịch vụ mà doanh nghiệp mua của người bán không có hóa đơn, lập bảng kê khai theo thứ tự thời gian mua, doanh nghiệp ghi đầy đủ các chỉ tiêu trên bảng kê, tổng hợp bảng kê hàng tháng.<br><br>
-      - Đối với doanh nghiệp có tổ chức các trạm thu mua ở nhiều nơi thì từng trạm thu mua phải lập từng bảng kê riêng. Doanh nghiệp lập bảng kê tổng hợp chung của các trạm.
+    <div class="bk-total">- Tổng giá trị hàng hóa, dịch vụ mua vào: <b>${money(total)} đồng</b><br>
+    - Số tiền bằng chữ: <b>${escapeHTML(moneyToWords(total))}</b></div>
+    <div class="bk-sign">
+      <div><div class="role">Người lập bảng kê</div><div>(Ký, ghi rõ họ tên)</div><div class="person">${escapeHTML(info.staff)}</div></div>
+      <div><div><i>Ngày ${p.d} tháng ${p.m} năm ${p.y}</i></div><div class="role">Người đại diện hoặc người được ủy quyền của doanh nghiệp</div><div>(Ký, ghi rõ họ tên)</div><div class="person">${escapeHTML(info.staff)}</div></div>
     </div>
+    <div class="bk-notes"><b>Ghi chú:</b><br>
+    - Căn cứ vào sổ thực tế các hàng hóa, dịch vụ mà doanh nghiệp mua của người bán không có hóa đơn, lập bảng kê khai theo thứ tự thời gian mua, doanh nghiệp ghi đầy đủ các chỉ tiêu trên bảng kê, tổng hợp bảng kê hàng tháng.<br><br>
+    - Đối với doanh nghiệp có tổ chức các trạm thu mua ở nhiều nơi thì từng trạm thu mua phải lập từng bảng kê riêng. Doanh nghiệp lập bảng kê tổng hợp chung của các trạm.</div>
   </div>`;
 }
 
