@@ -132,13 +132,15 @@ th{background:var(--blue);color:white;text-align:center}
     <div class="card">
       <h3>Thông tin người bán / người giao</h3>
       <div class="grid">
+        <div class="field"><label>Chọn CTV / HĐ khung</label><select id="ctvSelect" onchange="applySelectedCTV()"><option value="">-- Chọn mã CTV --</option></select><div class="hint">Chọn CTV để tự điền toàn bộ thông tin người bán.</div></div>
         <div class="field"><label>Họ và tên người bán *</label><input id="sellerName" placeholder="VD: Nguyễn Ngọc Hải" oninput="updateValidation()"><div class="hint">Nhập đúng tên trên CCCD / giấy tờ.</div></div>
         <div class="field"><label>Số điện thoại người bán *</label><input id="sellerPhone" type="text" inputmode="numeric" maxlength="10" autocomplete="tel" placeholder="VD: 0395489564" oninput="handleIdentifierInput(this,10)"></div>
         <div class="field"><label>Số CCCD / MST người bán</label><input id="sellerCCCD" type="text" inputmode="numeric" maxlength="13" placeholder="CCCD 12 số hoặc MST 10/13 số" oninput="handleIdentifierInput(this,13)"></div>
         <div class="field"><label>Địa chỉ người bán</label><input id="sellerAddress" placeholder="VD: TP.Hồ Chí Minh"></div>
         <div class="field"><label>Ngày cấp CCCD</label><input id="sellerIssueDate" type="date"><div class="hint">Chọn ngày ghi trên CCCD.</div></div>
         <div class="field"><label>Nơi cấp CCCD</label><input id="sellerIssuePlace" placeholder="VD: Cục Cảnh sát QLHC về TTXH"></div>
-        <div class="field"><label>Số HĐ / mã phiếu</label><input id="contractNo" placeholder="Bỏ trống để tự sinh số HĐ"><div class="hint">VD: HĐMB-2026-00015</div></div>
+        <div class="field"><label>Mã hồ sơ nội bộ</label><input id="contractNo" placeholder="Bỏ trống để hệ thống tự sinh"><div class="hint">Chỉ dùng để nối HOSO_HDMB ↔ CHITIET_HDMB, không in thay HĐ khung CTV.</div></div>
+        <div class="field"><label>Mã CTV / HĐ khung</label><input id="maCTV" placeholder="VD: 02/2026/HĐKV/POPO"><div class="hint">Tự điền khi chọn CTV; vẫn có thể nhập tay nếu cần.</div></div>
         <div class="field"><label>Ngày lập chứng từ *</label><input id="date" type="date"></div>
       </div>
     </div>
@@ -249,6 +251,43 @@ let identifierReview = {
   staffPhone:false
 };
 document.getElementById("date").valueAsDate = new Date();
+
+let ctvMaster = [];
+
+async function loadCTVList(){
+  const select = document.getElementById('ctvSelect');
+  try{
+    const r = await api('listCTV');
+    const rows = Array.isArray(r) ? r : (r.results || r.data || []);
+    ctvMaster = rows || [];
+    select.innerHTML = '<option value="">-- Chọn mã CTV --</option>' + ctvMaster.map((x,i)=>{
+      const code = firstValue(x.MA_CTV,x.maCTV,x.SO_HDKV,x.code);
+      const name = firstValue(x.TEN_NGUOI_BAN,x.sellerName,x.name);
+      return `<option value="${i}">${escapeHTML(code)}${name ? ' — '+escapeHTML(name) : ''}</option>`;
+    }).join('');
+  }catch(e){
+    console.warn('Không tải được danh sách CTV:',e);
+    select.innerHTML = '<option value="">-- Chưa tải được CTV --</option>';
+  }
+}
+
+function applySelectedCTV(){
+  const select = document.getElementById('ctvSelect');
+  if(select.value==='') return;
+  const x = ctvMaster[Number(select.value)] || {};
+  maCTV.value = firstValue(x.MA_CTV,x.maCTV,x.SO_HDKV,x.code);
+  sellerName.value = firstValue(x.TEN_NGUOI_BAN,x.sellerName,x.name);
+  sellerPhone.value = recoverLoadedPhone(firstValue(x.SDT,x.sellerPhone,x.phone));
+  sellerCCCD.value = recoverLoadedDocument(firstValue(x.CCCD,x.sellerCCCD,x.document));
+  sellerAddress.value = firstValue(x.DIA_CHI,x.sellerAddress,x.address);
+  sellerIssueDate.value = normalizeDateISO(firstValue(x.NGAY_CAP,x.sellerIssueDate,x.issueDate));
+  sellerIssuePlace.value = firstValue(x.NOI_CAP,x.sellerIssuePlace,x.issuePlace);
+  identifierReview.sellerPhone = false;
+  identifierReview.sellerCCCD = false;
+  updateValidation();
+}
+
+window.addEventListener('DOMContentLoaded', loadCTVList);
 
 async function api(action, data = {}){
   const res = await fetch(API_URL, {
@@ -399,6 +438,7 @@ function normalizeLoadedInfo(info={}){
   return {
     ...info,
     contractNo:firstValue(info.contractNo,info.SO_HD,info.soHD),
+    maCTV:firstValue(info.maCTV,info.MA_CTV,info.ma_ctv),
     date:normalizeDateISO(firstValue(info.dateISO,info.date,info.NGAY_LAP)),
     sellerName:firstValue(info.sellerName,info.HO_TEN,info.TEN_NGUOI_BAN),
     sellerPhone:sellerPhoneValue,
@@ -467,7 +507,7 @@ function moneyToWords(n){
 
 function getInfo(){
   return {
-    contractNo:getContractNo(), date:date.value,
+    contractNo:getContractNo(), maCTV:maCTV.value.trim(), date:date.value,
     sellerName:sellerName.value.trim(), sellerPhone:digitsOnly(sellerPhone.value), sellerCCCD:digitsOnly(sellerCCCD.value),
     sellerAddress:sellerAddress.value.trim(), sellerIssueDate:sellerIssueDate.value, sellerIssuePlace:sellerIssuePlace.value.trim(),
     payment:payment.value, staff:staff.value.trim(), staffPhone:digitsOnly(staffPhone.value), department:department.value.trim(), branch:branch.value.trim(),
@@ -579,7 +619,7 @@ function clearAll(){
   if(confirm("Xóa toàn bộ form và danh sách máy?")){
     items=[]; saveDraft();
     identifierReview={sellerPhone:false,sellerCCCD:false,staffPhone:false};
-    sellerName.value=sellerPhone.value=sellerCCCD.value=sellerAddress.value=sellerIssueDate.value=sellerIssuePlace.value=contractNo.value="";
+    sellerName.value=sellerPhone.value=sellerCCCD.value=sellerAddress.value=sellerIssueDate.value=sellerIssuePlace.value=contractNo.value=maCTV.value=""; if(document.getElementById("ctvSelect")) document.getElementById("ctvSelect").value="";
     staff.value=staffPhone.value=""; department.value="Nhân viên kho"; payment.value="Tiền mặt"; document.getElementById("date").valueAsDate=new Date();
     render();
   }
@@ -654,7 +694,7 @@ function fillFormFromLoaded(){
     sellerCCCD:Boolean(info._sellerCCCDNeedsReview),
     staffPhone:Boolean(info._staffPhoneNeedsReview)
   };
-  contractNo.value=info.contractNo||""; date.value=info.date||"";
+  contractNo.value=info.contractNo||""; maCTV.value=info.maCTV||""; date.value=info.date||"";
   sellerName.value=info.sellerName||""; sellerPhone.value=info.sellerPhone||""; sellerCCCD.value=info.sellerCCCD||""; sellerAddress.value=info.sellerAddress||"";
   sellerIssueDate.value=info.sellerIssueDate||""; sellerIssuePlace.value=info.sellerIssuePlace||"";
   payment.value=info.payment||"Tiền mặt"; staff.value=info.staff||""; staffPhone.value=info.staffPhone||""; department.value=info.department||"Nhân viên kho"; branch.value=info.branch||branch.value;
@@ -678,13 +718,20 @@ function paymentChecks(pay){return `☐ Tiền mặt &nbsp;&nbsp; ☐ Chuyển k
 function sumItems(itemList){return itemList.reduce((s,x)=>s+Number(x.qty||0)*Number(x.price||0),0)}
 
 function baseContractNo(info){return String(info.contractNo || '').trim() || getContractNo()}
+function cleanCTVContractNo(value){
+  return String(value || '').trim().replace(/^Số\s*:\s*/i,'').trim();
+}
+function ctvPNKReference(info,itemList){
+  const hdKv = cleanCTVContractNo(info.maCTV || info.MA_CTV || '');
+  const imei = normalizeImei((itemList && itemList[0] && itemList[0].imei) || '');
+  const base = hdKv || baseContractNo(info);
+  return imei ? `${base}/${imei}` : base;
+}
 function handoverNo(info){
-  // Luồng CTV chỉ khác TÊN CHỨNG TỪ, còn mã đối chiếu vẫn dùng chung HĐMB.
   return baseContractNo(info);
 }
-function pnkNo(info, mode){
-  // Giữ nguyên mã HĐMB để HĐMB / BBBG / Bảng kê / PNK / sao kê đối chiếu cùng 1 mã.
-  return baseContractNo(info);
+function pnkNo(info, mode, itemList){
+  return mode === 'ctv' ? ctvPNKReference(info,itemList||[]) : baseContractNo(info);
 }
 
 function printHDMB(info,itemList){
@@ -751,9 +798,9 @@ function printBienBanBanGiao(info,itemList){
 function printPNK(info,itemList, mode='hdmb'){
   const total = sumItems(itemList), p = dateParts(info.date);
   const isCTV = mode === 'ctv';
-  const refNo = baseContractNo(info);
-  const refLabel = 'Theo HĐMB số';
-  return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(pnkNo(info, mode))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>${refLabel}:</b> ${escapeHTML(refNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>............................</b></td></tr></table>`;
+  const refNo = isCTV ? ctvPNKReference(info,itemList) : baseContractNo(info);
+  const refLabel = isCTV ? 'Căn cứ Hợp đồng số' : 'Theo HĐMB số';
+  return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(pnkNo(info, mode, itemList))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>${refLabel}:</b> ${escapeHTML(refNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>............................</b></td></tr></table>`;
 }
 
 function printDoc(type){
@@ -763,8 +810,8 @@ function printDoc(type){
   if(type==='bangke') printArea.innerHTML=printBangKe(info,items,'hdmb');
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,items,'hdmb');
   if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,items);
-  if(type==='bangke_ctv') printArea.innerHTML=printBangKe(info,items,'ctv');
-  if(type==='phieunhapkho_ctv') printArea.innerHTML=printPNK(info,items,'ctv');
+  if(type==='bangke_ctv') printArea.innerHTML=items.map((x,i)=>printBangKe(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='phieunhapkho_ctv') printArea.innerHTML=items.map((x,i)=>printPNK(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
   setTimeout(()=>window.print(),100);
 }
 function printLoaded(type){
@@ -779,8 +826,8 @@ function printLoaded(type){
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList,'hdmb');
   if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList,'hdmb');
   if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,itemList);
-  if(type==='bangke_ctv') printArea.innerHTML=printBangKe(info,itemList,'ctv');
-  if(type==='phieunhapkho_ctv') printArea.innerHTML=printPNK(info,itemList,'ctv');
+  if(type==='bangke_ctv') printArea.innerHTML=itemList.map((x,i)=>printBangKe(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='phieunhapkho_ctv') printArea.innerHTML=itemList.map((x,i)=>printPNK(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
   setTimeout(()=>window.print(),100);
 }
 render();
