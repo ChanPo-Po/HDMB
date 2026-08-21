@@ -194,6 +194,7 @@ th{background:var(--blue);color:white;text-align:center}
         <button id="btnBangKe" class="btn print-btn print-btn-main" onclick="printDoc('bangke')">In bảng kê HĐMB</button>
         <button id="btnPNK" class="btn3 print-btn print-btn-main" onclick="printDoc('phieunhapkho')">In phiếu nhập kho HĐMB</button>
         <button id="btnBBBG" class="btn3 print-btn print-btn-main" onclick="printDoc('bienbanbangiao')">📦 In biên bản bàn giao CTV</button>
+        <button id="btnDNTT" class="btn2 print-btn print-btn-main" onclick="printDoc('dntt')">In đề nghị thanh toán</button>
         <button id="btnBangKeCTV" class="btn print-btn print-btn-main" onclick="printDoc('bangke_ctv')">In bảng kê CTV</button>
         <button id="btnPNKCTV" class="btn3 print-btn print-btn-main" onclick="printDoc('phieunhapkho_ctv')">In phiếu nhập kho CTV</button>
         <button class="btn4" onclick="clearAll()">Xóa toàn bộ</button>
@@ -205,19 +206,19 @@ th{background:var(--blue);color:white;text-align:center}
     <div class="card">
       <h3>Tra cứu hồ sơ đã lưu</h3>
       <div class="search-box">
-        <input id="searchKeyword" placeholder="Nhập Số HĐ / IMEI / SĐT / CCCD / tên người bán">
+        <input id="searchKeyword" placeholder="Nhập Mã CTV / IMEI / SĐT / CCCD / tên người bán / mã hồ sơ">
         <button class="btn" onclick="searchContracts()">🔎 Tìm kiếm</button>
       </div>
-      <div class="hint" style="margin-top:8px">Ví dụ: HĐMB-2026-00015 hoặc 353083962932082</div>
+      <div class="hint" style="margin-top:8px">Ví dụ: 02/2026/HĐKV/POPO hoặc IMEI 353083962932082</div>
     </div>
 
     <div class="card">
       <h3>Kết quả tìm kiếm</h3>
-      <div class="table-wrap"><table><thead><tr><th>Số HĐ</th><th>Ngày lập</th><th>Người bán</th><th>SĐT</th><th>Tổng SL</th><th>Tổng tiền</th><th>Thao tác</th></tr></thead><tbody id="searchResults"><tr><td colspan="7" class="center">Chưa có dữ liệu tìm kiếm</td></tr></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Mã hồ sơ</th><th>HĐ khung CTV</th><th>Ngày lập</th><th>Người bán</th><th>IMEI</th><th>Tổng tiền</th><th>Thao tác</th></tr></thead><tbody id="searchResults"><tr><td colspan="7" class="center">Chưa có dữ liệu tìm kiếm</td></tr></tbody></table></div>
     </div>
 
     <div id="loadedContractBox" class="card hidden">
-      <h3>Hồ sơ đang mở: <span id="loadedContractNo" class="badge"></span></h3>
+      <h3>Hồ sơ đang mở: <span id="loadedContractNo" class="badge"></span> &nbsp; <span id="loadedCTVNo" class="badge"></span></h3>
       <div class="summary-grid">
         <div class="summary-pill"><div class="summary-label">📦 Tổng SL</div><div class="summary-value"><span id="loadedTotalQty">0</span> máy</div></div>
         <div class="summary-pill"><div class="summary-label">💰 Tổng tiền</div><div class="summary-value"><span id="loadedTotal">0</span>đ</div></div>
@@ -229,8 +230,9 @@ th{background:var(--blue);color:white;text-align:center}
         <button class="btn print-btn" onclick="printLoaded('bangke')">In lại bảng kê HĐMB</button>
         <button class="btn3 print-btn" onclick="printLoaded('phieunhapkho')">In lại phiếu nhập kho HĐMB</button>
         <button class="btn3 print-btn" onclick="printLoaded('bienbanbangiao')">📦 In lại biên bản bàn giao CTV</button>
-        <button class="btn print-btn" onclick="printLoaded('bangke_ctv')">In lại bảng kê CTV</button>
-        <button class="btn3 print-btn" onclick="printLoaded('phieunhapkho_ctv')">In lại phiếu nhập kho CTV</button>
+        <button class="btn2 print-btn" onclick="printLoaded('dntt')">In lại đề nghị thanh toán</button>
+        <button class="btn print-btn" onclick="printLoaded('bangke_ctv')">In lại bảng kê CTV (02/TNDN)</button>
+        <button class="btn3 print-btn" onclick="printLoaded('phieunhapkho_ctv')">In lại PNK CTV</button>
         <button class="btn-light" onclick="fillFormFromLoaded()">Đổ lại lên form sửa/in</button>
       </div>
     </div>
@@ -669,7 +671,7 @@ async function searchContracts(){
 }
 function renderSearchResults(rows){
   if(!rows.length){searchResults.innerHTML=`<tr><td colspan="7" class="center">Không tìm thấy hồ sơ</td></tr>`;return}
-  searchResults.innerHTML=rows.map(r=>`<tr><td><b>${escapeHTML(r.contractNo)}</b></td><td>${escapeHTML(dmy(r.dateISO||r.date))}</td><td>${escapeHTML(r.sellerName)}</td><td>${escapeHTML(r.sellerPhone)}</td><td class="center">${escapeHTML(r.totalQty)}</td><td class="right">${money(r.totalAmount)}</td><td class="center"><button class="btn-light" onclick="loadContract('${escapeHTML(r.contractNo)}')">Mở / In lại</button></td></tr>`).join('');
+  searchResults.innerHTML=rows.map(r=>`<tr><td><b>${escapeHTML(r.contractNo)}</b></td><td><b>${escapeHTML(r.maCTV||'')}</b></td><td>${escapeHTML(dmy(r.dateISO||r.date))}</td><td>${escapeHTML(r.sellerName)}</td><td>${escapeHTML((r.imeis||[]).join(', '))}</td><td class="right">${money(r.totalAmount)}</td><td class="center"><button class="btn-light" onclick="loadContract('${escapeHTML(r.contractNo)}')">Mở / In lại</button></td></tr>`).join('');
 }
 async function loadContract(contractNoValue){
   toast("Đang mở hồ sơ...");
@@ -680,6 +682,7 @@ async function loadContract(contractNoValue){
     loadedContract={...data, info:normalizeLoadedInfo(data.info)};
     const loadedInfo=loadedContract.info;
     loadedContractNo.innerText=loadedInfo.contractNo;
+    const loadedCTVEl=document.getElementById('loadedCTVNo'); if(loadedCTVEl) loadedCTVEl.innerText=loadedInfo.maCTV ? ('HĐKV: '+loadedInfo.maCTV) : '';
     loadedTotalQty.innerText=money(loadedInfo.totalQty||(loadedContract.items||[]).reduce((s,x)=>s+Number(x.qty||0),0));
     loadedTotal.innerText=money(loadedInfo.totalAmount||(loadedContract.items||[]).reduce((s,x)=>s+Number(x.amount||0),0));
     loadedSeller.innerText=loadedInfo.sellerName||"---";
@@ -724,17 +727,14 @@ function cleanCTVContractNo(value){
 function ctvPNKReference(info,itemList){
   return cleanCTVContractNo(info.maCTV || info.MA_CTV || '') || baseContractNo(info);
 }
-function handoverNo(info){
-  return baseContractNo(info);
-}
-function pnkNo(info, mode, itemList){
-  return info._pnkNo || '';
-}
-async function assignPNKNos(info,itemList){
+function handoverNo(info){ return info._bbbgNo || ''; }
+function dnttNo(info){ return info._dnttNo || ''; }
+function pnkNo(){ return ''; } // PNK theo yêu cầu kế toán: không đánh số
+async function assignDocNos(info,itemList,kind){
   const base=String(info.contractNo||'').trim() || cleanCTVContractNo(info.maCTV||'');
   const keys=itemList.map((x,i)=>`${base}|${normalizeImei(x.imei)||('ROW'+i)}`);
-  const res=await api('getPNKNos',{keys});
-  if(!res || !res.ok || !Array.isArray(res.numbers)) throw new Error((res&&res.message)||'Không lấy được số PNK');
+  const res=await api('getDocNos',{kind,keys});
+  if(!res || !res.ok || !Array.isArray(res.numbers)) throw new Error((res&&res.message)||'Không lấy được số chứng từ');
   return res.numbers;
 }
 
@@ -796,7 +796,7 @@ function printBangKe(info,itemList, mode='hdmb'){
 function printBienBanBanGiao(info,itemList){
   const p=dateParts(info.date), total=sumItems(itemList);
   const totalQty=itemList.reduce((s,x)=>s+Number(x.qty||0),0);
-  return `<div class="doc-center"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập – Tự do – Hạnh phúc</b><br>---------------------------</div><div class="doc-title">BIÊN BẢN BÀN GIAO MÁY THU MUA</div><div class="doc-center"><b>Số HĐMB: ${escapeHTML(baseContractNo(info))}</b></div><p>Hôm nay, ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b>, tại <b>${escapeHTML(info.branch)}</b>, chúng tôi gồm:</p><div class="doc-section-title">I. BÊN GIAO</div><p>Họ và tên: <b>${escapeHTML(info.sellerName)}</b><br>CCCD/MST số: <b>${escapeHTML(info.sellerCCCD)}</b><br>Số điện thoại: <b>${escapeHTML(info.sellerPhone)}</b><br>Địa chỉ: <b>${escapeHTML(info.sellerAddress)}</b></p><div class="doc-section-title">II. BÊN NHẬN</div><p>Đơn vị: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>Mã số thuế: <b>3703340710</b><br>Người nhận: <b>${escapeHTML(info.staff)}</b><br>Chức vụ/Bộ phận: <b>${escapeHTML(info.department)}</b><br>Số điện thoại: <b>${escapeHTML(info.staffPhone)}</b></p><div class="doc-section-title">III. DANH SÁCH THIẾT BỊ BÀN GIAO</div><table><tr><th>STT</th><th>IMEI/Serial</th><th>Dòng máy</th><th>GB</th><th>Màu</th><th>Tình trạng</th><th>SL</th><th>Giá mua</th><th>Thành tiền</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.model)}</td><td class="center">${escapeHTML(x.gb)}</td><td>${escapeHTML(x.color)}</td><td>${escapeHTML(x.condition||x.note||'')}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money((x.qty||0)*(x.price||0))}</td></tr>`).join('')}</table><p><b>Tổng số lượng máy bàn giao:</b> ${totalQty} máy</p><p><b>Tổng giá trị lô hàng:</b> ${money(total)}đ</p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><div class="doc-section-title">IV. CAM KẾT VÀ XÁC NHẬN</div><p>1. Bên giao cam kết toàn bộ thiết bị nêu trên được thu mua/chuyển nhượng hợp pháp, không phải tài sản do phạm tội mà có, không thuộc diện tranh chấp, cầm cố hoặc bị cơ quan có thẩm quyền truy tìm.</p><p>2. Bên giao chịu trách nhiệm về nguồn gốc thiết bị và các thông tin đã cung cấp liên quan đến thiết bị bàn giao.</p><p>3. Bên nhận đã kiểm đếm và tiếp nhận số lượng thiết bị thực tế theo danh sách nêu trên.</p><p>Biên bản được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p><br><table class="signature"><tr><td>BÊN GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>BÊN NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff||"")}</b></td></tr></table>`;
+  return `<div class="doc-center"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br><b>Độc lập – Tự do – Hạnh phúc</b><br>---------------------------</div><div class="doc-title">BIÊN BẢN BÀN GIAO MÁY THU MUA</div><div class="doc-center"><b>Số: ${escapeHTML(handoverNo(info))}</b></div><p><b>Căn cứ Hợp đồng số:</b> ${escapeHTML(cleanCTVContractNo(info.maCTV)||baseContractNo(info))}</p><p>Hôm nay, ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b>, tại <b>${escapeHTML(info.branch)}</b>, chúng tôi gồm:</p><div class="doc-section-title">I. BÊN GIAO</div><p>Họ và tên: <b>${escapeHTML(info.sellerName)}</b><br>CCCD/MST số: <b>${escapeHTML(info.sellerCCCD)}</b><br>Số điện thoại: <b>${escapeHTML(info.sellerPhone)}</b><br>Địa chỉ: <b>${escapeHTML(info.sellerAddress)}</b></p><div class="doc-section-title">II. BÊN NHẬN</div><p>Đơn vị: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>Mã số thuế: <b>3703340710</b><br>Người nhận: <b>${escapeHTML(info.staff)}</b><br>Chức vụ/Bộ phận: <b>${escapeHTML(info.department)}</b><br>Số điện thoại: <b>${escapeHTML(info.staffPhone)}</b></p><div class="doc-section-title">III. DANH SÁCH THIẾT BỊ BÀN GIAO</div><table><tr><th>STT</th><th>IMEI/Serial</th><th>Dòng máy</th><th>GB</th><th>Màu</th><th>Tình trạng</th><th>SL</th><th>Giá mua</th><th>Thành tiền</th></tr>${itemList.map((x,i)=>`<tr><td class="center">${i+1}</td><td>${escapeHTML(x.imei)}</td><td>${escapeHTML(x.model)}</td><td class="center">${escapeHTML(x.gb)}</td><td>${escapeHTML(x.color)}</td><td>${escapeHTML(x.condition||x.note||'')}</td><td class="center">${x.qty}</td><td class="right">${money(x.price)}</td><td class="right">${money((x.qty||0)*(x.price||0))}</td></tr>`).join('')}</table><p><b>Tổng số lượng máy bàn giao:</b> ${totalQty} máy</p><p><b>Tổng giá trị lô hàng:</b> ${money(total)}đ</p><p><b>Bằng chữ:</b> ${moneyToWords(total)}</p><div class="doc-section-title">IV. CAM KẾT VÀ XÁC NHẬN</div><p>1. Bên giao cam kết toàn bộ thiết bị nêu trên được thu mua/chuyển nhượng hợp pháp, không phải tài sản do phạm tội mà có, không thuộc diện tranh chấp, cầm cố hoặc bị cơ quan có thẩm quyền truy tìm.</p><p>2. Bên giao chịu trách nhiệm về nguồn gốc thiết bị và các thông tin đã cung cấp liên quan đến thiết bị bàn giao.</p><p>3. Bên nhận đã kiểm đếm và tiếp nhận số lượng thiết bị thực tế theo danh sách nêu trên.</p><p>Biên bản được lập thành 02 bản có giá trị pháp lý như nhau, mỗi bên giữ 01 bản.</p><br><table class="signature"><tr><td>BÊN GIAO<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>BÊN NHẬN<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff||"")}</b></td></tr></table>`;
 }
 
 function printPNK(info,itemList, mode='hdmb'){
@@ -804,7 +804,26 @@ function printPNK(info,itemList, mode='hdmb'){
   const isCTV = mode === 'ctv';
   const refNo = isCTV ? ctvPNKReference(info,itemList) : baseContractNo(info);
   const refLabel = isCTV ? 'Căn cứ Hợp đồng số' : 'Theo HĐMB số';
-  return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(pnkNo(info, mode, itemList))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>${refLabel}:</b> ${escapeHTML(refNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>............................</b></td></tr></table>`;
+  return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>${refLabel}:</b> ${escapeHTML(refNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>............................</b></td></tr></table>`;
+}
+
+function printDNTT(info,itemList){
+  const total=sumItems(itemList), p=dateParts(info.date);
+  const x=itemList[0]||{};
+  return `<table class="no-border"><tr><td><b>HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE</b><br>MST: <b>3703340710</b></td><td class="doc-right"><b>Số: ${escapeHTML(dnttNo(info))}</b></td></tr></table>
+  <div class="doc-title">ĐỀ NGHỊ THANH TOÁN</div>
+  <div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div>
+  <p><b>Kính gửi:</b> Bộ phận Kế toán</p>
+  <p><b>Người đề nghị:</b> ${escapeHTML(info.staff)} &nbsp;&nbsp; <b>Bộ phận:</b> ${escapeHTML(info.department)}</p>
+  <p><b>Đề nghị thanh toán cho:</b> ${escapeHTML(info.sellerName)}</p>
+  <p><b>CCCD:</b> ${escapeHTML(info.sellerCCCD)} &nbsp;&nbsp; <b>SĐT:</b> ${escapeHTML(info.sellerPhone)}</p>
+  <p><b>Căn cứ Hợp đồng số:</b> ${escapeHTML(cleanCTVContractNo(info.maCTV)||baseContractNo(info))}</p>
+  <table><tr><th>STT</th><th>Nội dung thanh toán</th><th>IMEI</th><th>Số tiền</th></tr>
+  <tr><td class="center">1</td><td>Thanh toán tiền thu mua ${escapeHTML(x.model)} ${escapeHTML(x.gb)} ${escapeHTML(x.color)}</td><td>${escapeHTML(x.imei)}</td><td class="right">${money(total)}</td></tr></table>
+  <p class="doc-right"><b>Tổng số tiền đề nghị: ${money(total)}đ</b></p>
+  <p><b>Bằng chữ:</b> ${moneyToWords(total)}</p>
+  <p><b>Hình thức thanh toán:</b> Chuyển khoản</p><br>
+  <table class="signature"><tr><td>Người đề nghị<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>............................</td><td>Người duyệt<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>............................</td></tr></table>`;
 }
 
 async function printDoc(type){
@@ -812,10 +831,11 @@ async function printDoc(type){
   const info=getInfo();
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,items);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,items,'hdmb');
-  if(type==='phieunhapkho'){ const nos=await assignPNKNos(info,[{imei:'ALL'}]); printArea.innerHTML=printPNK({...info,_pnkNo:nos[0]},items,'hdmb'); }
-  if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,items);
+  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,items,'hdmb');
+  if(type==='bienbanbangiao'){ const nos=await assignDocNos(info,items,'BBBG'); printArea.innerHTML=items.map((x,i)=>printBienBanBanGiao({...info,_bbbgNo:nos[i]},[x])+(i<items.length-1?'<div class="page-break"></div>':'')).join(''); }
   if(type==='bangke_ctv') printArea.innerHTML=items.map((x,i)=>printBangKe(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
-  if(type==='phieunhapkho_ctv'){ const nos=await assignPNKNos(info,items); printArea.innerHTML=items.map((x,i)=>printPNK({...info,_pnkNo:nos[i]},[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join(''); }
+  if(type==='phieunhapkho_ctv') printArea.innerHTML=items.map((x,i)=>printPNK(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='dntt'){ const nos=await assignDocNos(info,items,'DNTT'); printArea.innerHTML=items.map((x,i)=>printDNTT({...info,_dnttNo:nos[i]},[x])+(i<items.length-1?'<div class="page-break"></div>':'')).join(''); }
   setTimeout(()=>window.print(),100);
 }
 async function printLoaded(type){
@@ -828,10 +848,11 @@ async function printLoaded(type){
   }
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList,'hdmb');
-  if(type==='phieunhapkho'){ const nos=await assignPNKNos(info,[{imei:'ALL'}]); printArea.innerHTML=printPNK({...info,_pnkNo:nos[0]},itemList,'hdmb'); }
-  if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,itemList);
+  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList,'hdmb');
+  if(type==='bienbanbangiao'){ const nos=await assignDocNos(info,itemList,'BBBG'); printArea.innerHTML=itemList.map((x,i)=>printBienBanBanGiao({...info,_bbbgNo:nos[i]},[x])+(i<itemList.length-1?'<div class="page-break"></div>':'')).join(''); }
   if(type==='bangke_ctv') printArea.innerHTML=itemList.map((x,i)=>printBangKe(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
-  if(type==='phieunhapkho_ctv'){ const nos=await assignPNKNos(info,itemList); printArea.innerHTML=itemList.map((x,i)=>printPNK({...info,_pnkNo:nos[i]},[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join(''); }
+  if(type==='phieunhapkho_ctv') printArea.innerHTML=itemList.map((x,i)=>printPNK(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='dntt'){ const nos=await assignDocNos(info,itemList,'DNTT'); printArea.innerHTML=itemList.map((x,i)=>printDNTT({...info,_dnttNo:nos[i]},[x])+(i<itemList.length-1?'<div class="page-break"></div>':'')).join(''); }
   setTimeout(()=>window.print(),100);
 }
 render();

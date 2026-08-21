@@ -29,7 +29,7 @@ function doPost(e){
     if(action === 'saveContract') return json_(saveContract_(body.data || {}));
     if(action === 'searchContracts') return json_(searchContracts_(body.keyword || ''));
     if(action === 'getContract') return json_(getContract_(body.contractNo || ''));
-    if(action === 'getPNKNos') return json_(getPNKNos_(body.keys || []));
+    if(action === 'getDocNos') return json_(getDocNos_(body.kind || '', body.keys || []));
     return json_({ok:false,message:'Action không hợp lệ: '+action});
   }catch(err){ return json_({ok:false,message:String(err && err.message || err)}); }
 }
@@ -47,7 +47,9 @@ function headerMap_(sh){ const h=sh.getRange(1,1,1,sh.getLastColumn()).getDispla
 function rowObj_(headers,row){ const o={}; headers.forEach((h,i)=>o[h]=row[i]); return o; }
 function stripSo_(v){ return clean_(v).replace(/^Số\s*:\s*/i,'').trim(); }
 
-function getPNKNos_(keys){
+function getDocNos_(kind, keys){
+  kind=clean_(kind).toUpperCase();
+  if(['BBBG','DNTT'].indexOf(kind)<0) throw new Error('Loại số chứng từ không hợp lệ');
   keys=(keys||[]).map(clean_).filter(Boolean);
   if(!keys.length) return {ok:true,numbers:[]};
   const year=Utilities.formatDate(new Date(),CFG.TZ,'yyyy');
@@ -55,18 +57,18 @@ function getPNKNos_(keys){
   const lock=LockService.getScriptLock();
   lock.waitLock(30000);
   try{
-    let seq=Number(props.getProperty('PNK_SEQ_'+year)||0);
+    let seq=Number(props.getProperty(kind+'_SEQ_'+year)||0);
     const numbers=keys.map(key=>{
-      const mapKey='PNK_MAP_'+year+'_'+Utilities.base64EncodeWebSafe(key).replace(/=+$/,'');
+      const mapKey=kind+'_MAP_'+year+'_'+Utilities.base64EncodeWebSafe(key).replace(/=+$/,'');
       let no=props.getProperty(mapKey);
       if(!no){
         seq++;
-        no='PNK-'+year+'-'+String(seq).padStart(5,'0');
+        no=kind+'-'+year+'-'+String(seq).padStart(5,'0');
         props.setProperty(mapKey,no);
       }
       return no;
     });
-    props.setProperty('PNK_SEQ_'+year,String(seq));
+    props.setProperty(kind+'_SEQ_'+year,String(seq));
     return {ok:true,numbers:numbers};
   } finally { lock.releaseLock(); }
 }
@@ -112,10 +114,37 @@ function saveContract_(data){
 }
 
 function searchContracts_(keyword){
-  keyword=clean_(keyword).toLowerCase(); const hs=sh_(CFG.HOSO), last=hs.getLastRow(); if(last<2) return {ok:true,results:[]};
-  const {headers}=headerMap_(hs); const rows=hs.getRange(2,1,last-1,headers.length).getDisplayValues(); const ctvList=listCTV_().results;
+  keyword=clean_(keyword).toLowerCase();
+  const hs=sh_(CFG.HOSO), last=hs.getLastRow();
+  if(last<2) return {ok:true,results:[]};
+  const {headers}=headerMap_(hs);
+  const rows=hs.getRange(2,1,last-1,headers.length).getDisplayValues();
+  const ctvList=listCTV_().results;
+
+  // Gom IMEI theo mã hồ sơ để Tra cứu thực sự tìm được bằng IMEI.
+  const imeiBySoHd={};
+  const ct=sh_(CFG.CHITIET), cm=headerMap_(ct), clast=ct.getLastRow();
+  if(clast>=2){
+    ct.getRange(2,1,clast-1,cm.headers.length).getDisplayValues().forEach(r=>{
+      const x=rowObj_(cm.headers,r), so=clean_(x['.SO_HD']), im=clean_(x.IMEI);
+      if(!so) return;
+      if(!imeiBySoHd[so]) imeiBySoHd[so]=[];
+      if(im) imeiBySoHd[so].push(im);
+    });
+  }
+
   const results=[];
-  rows.forEach(r=>{ const h=rowObj_(headers,r), c=ctvList.find(x=>stripSo_(x.MA_CTV)===stripSo_(h.MA_CTV))||{}; const blob=[h.SO_HD,h.MA_CTV,c.TEN_NGUOI_BAN,c.SDT,c.CCCD].join(' ').toLowerCase(); if(!keyword||blob.includes(keyword)) results.push({contractNo:h.SO_HD,date:h.NGAY_LAP,sellerName:c.TEN_NGUOI_BAN||'',sellerPhone:c.SDT||'',totalQty:h.TONG_SL,totalAmount:moneyNumber_(h.TONG_TIEN)}); });
+  rows.forEach(r=>{
+    const h=rowObj_(headers,r);
+    const c=ctvList.find(x=>stripSo_(x.MA_CTV)===stripSo_(h.MA_CTV))||{};
+    const imeis=imeiBySoHd[clean_(h.SO_HD)]||[];
+    const blob=[h.SO_HD,h.MA_CTV,c.TEN_NGUOI_BAN,c.SDT,c.CCCD].concat(imeis).join(' ').toLowerCase();
+    if(!keyword||blob.includes(keyword)) results.push({
+      contractNo:h.SO_HD, maCTV:stripSo_(h.MA_CTV), date:h.NGAY_LAP,
+      sellerName:c.TEN_NGUOI_BAN||'', sellerPhone:c.SDT||'', imeis:imeis,
+      totalQty:h.TONG_SL,totalAmount:moneyNumber_(h.TONG_TIEN)
+    });
+  });
   return {ok:true,results:results.slice(-100).reverse()};
 }
 
