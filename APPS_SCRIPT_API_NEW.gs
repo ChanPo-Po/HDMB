@@ -29,6 +29,7 @@ function doPost(e){
     if(action === 'saveContract') return json_(saveContract_(body.data || {}));
     if(action === 'searchContracts') return json_(searchContracts_(body.keyword || ''));
     if(action === 'getContract') return json_(getContract_(body.contractNo || ''));
+    if(action === 'getPNKNos') return json_(getPNKNos_(body.keys || []));
     return json_({ok:false,message:'Action không hợp lệ: '+action});
   }catch(err){ return json_({ok:false,message:String(err && err.message || err)}); }
 }
@@ -45,6 +46,30 @@ function makeSoHd_(){ return 'HS-'+ymd_()+'-'+String(Math.floor(1000+Math.random
 function headerMap_(sh){ const h=sh.getRange(1,1,1,sh.getLastColumn()).getDisplayValues()[0]; const m={}; h.forEach((x,i)=>m[clean_(x)]=i); return {headers:h,map:m}; }
 function rowObj_(headers,row){ const o={}; headers.forEach((h,i)=>o[h]=row[i]); return o; }
 function stripSo_(v){ return clean_(v).replace(/^Số\s*:\s*/i,'').trim(); }
+
+function getPNKNos_(keys){
+  keys=(keys||[]).map(clean_).filter(Boolean);
+  if(!keys.length) return {ok:true,numbers:[]};
+  const year=Utilities.formatDate(new Date(),CFG.TZ,'yyyy');
+  const props=PropertiesService.getScriptProperties();
+  const lock=LockService.getScriptLock();
+  lock.waitLock(30000);
+  try{
+    let seq=Number(props.getProperty('PNK_SEQ_'+year)||0);
+    const numbers=keys.map(key=>{
+      const mapKey='PNK_MAP_'+year+'_'+Utilities.base64EncodeWebSafe(key).replace(/=+$/,'');
+      let no=props.getProperty(mapKey);
+      if(!no){
+        seq++;
+        no='PNK-'+year+'-'+String(seq).padStart(5,'0');
+        props.setProperty(mapKey,no);
+      }
+      return no;
+    });
+    props.setProperty('PNK_SEQ_'+year,String(seq));
+    return {ok:true,numbers:numbers};
+  } finally { lock.releaseLock(); }
+}
 
 function listCTV_(){
   const sh=sh_(CFG.CTV), last=sh.getLastRow(); if(last<2) return {ok:true,results:[]};

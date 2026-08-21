@@ -722,16 +722,20 @@ function cleanCTVContractNo(value){
   return String(value || '').trim().replace(/^Số\s*:\s*/i,'').trim();
 }
 function ctvPNKReference(info,itemList){
-  const hdKv = cleanCTVContractNo(info.maCTV || info.MA_CTV || '');
-  const imei = normalizeImei((itemList && itemList[0] && itemList[0].imei) || '');
-  const base = hdKv || baseContractNo(info);
-  return imei ? `${base}/${imei}` : base;
+  return cleanCTVContractNo(info.maCTV || info.MA_CTV || '') || baseContractNo(info);
 }
 function handoverNo(info){
   return baseContractNo(info);
 }
 function pnkNo(info, mode, itemList){
-  return mode === 'ctv' ? ctvPNKReference(info,itemList||[]) : baseContractNo(info);
+  return info._pnkNo || '';
+}
+async function assignPNKNos(info,itemList){
+  const base=String(info.contractNo||'').trim() || cleanCTVContractNo(info.maCTV||'');
+  const keys=itemList.map((x,i)=>`${base}|${normalizeImei(x.imei)||('ROW'+i)}`);
+  const res=await api('getPNKNos',{keys});
+  if(!res || !res.ok || !Array.isArray(res.numbers)) throw new Error((res&&res.message)||'Không lấy được số PNK');
+  return res.numbers;
 }
 
 function printHDMB(info,itemList){
@@ -803,18 +807,18 @@ function printPNK(info,itemList, mode='hdmb'){
   return `<table class="no-border"><tr><td><b>Đơn vị:</b> HỘ KINH DOANH CỬA HÀNG ĐTDĐ POPOPHONE<br><b>Bộ phận:</b> ${escapeHTML(info.department)}</td><td class="doc-right"><b>Mẫu số 01 - VT</b><br><span>(Phiếu nhập kho)</span></td></tr></table><div class="doc-title">PHIẾU NHẬP KHO</div><div class="doc-center">Ngày <b>${p.d}</b> tháng <b>${p.m}</b> năm <b>${p.y}</b></div><p class="doc-right"><b>Số:</b> ${escapeHTML(pnkNo(info, mode, itemList))}</p><p><b>Họ và tên người giao:</b> ${escapeHTML(info.sellerName)}</p><p><b>${refLabel}:</b> ${escapeHTML(refNo)} &nbsp;&nbsp; <b>Ngày:</b> ${dmy(info.date)}</p><p><b>Nhập tại kho:</b> ${escapeHTML(info.department)} &nbsp;&nbsp; <b>Địa điểm:</b> ${escapeHTML(info.branch)}</p>${pnkTable(itemList)}<p class="doc-right"><b>Tổng cộng: ${money(total)}đ</b></p><p><b>Tổng số tiền bằng chữ:</b> ${moneyToWords(total)}</p><br><table class="signature"><tr><td>Người lập phiếu<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Người giao hàng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.sellerName)}</b></td><td>Thủ kho<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán trưởng<br><span style="font-weight:normal">(Ký, họ tên)</span><br><br><b>............................</b></td></tr></table>`;
 }
 
-function printDoc(type){
+async function printDoc(type){
   const errors=updateValidation(); if(errors.length){alert("Còn lỗi dữ liệu, sửa xong mới in được.\n\n"+errors.join("\n"));return}
   const info=getInfo();
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,items);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,items,'hdmb');
-  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,items,'hdmb');
+  if(type==='phieunhapkho'){ const nos=await assignPNKNos(info,[{imei:'ALL'}]); printArea.innerHTML=printPNK({...info,_pnkNo:nos[0]},items,'hdmb'); }
   if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,items);
   if(type==='bangke_ctv') printArea.innerHTML=items.map((x,i)=>printBangKe(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
-  if(type==='phieunhapkho_ctv') printArea.innerHTML=items.map((x,i)=>printPNK(info,[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='phieunhapkho_ctv'){ const nos=await assignPNKNos(info,items); printArea.innerHTML=items.map((x,i)=>printPNK({...info,_pnkNo:nos[i]},[x],'ctv')+(i<items.length-1?'<div class="page-break"></div>':'')).join(''); }
   setTimeout(()=>window.print(),100);
 }
-function printLoaded(type){
+async function printLoaded(type){
   if(!loadedContract){alert("Chưa mở hồ sơ");return}
   const info=normalizeLoadedInfo(loadedContract.info||{}), itemList=loadedContract.items||[];
   if(info._sellerPhoneNeedsReview||info._sellerCCCDNeedsReview||info._staffPhoneNeedsReview){
@@ -824,10 +828,10 @@ function printLoaded(type){
   }
   if(type==='hdmb') printArea.innerHTML=printHDMB(info,itemList);
   if(type==='bangke') printArea.innerHTML=printBangKe(info,itemList,'hdmb');
-  if(type==='phieunhapkho') printArea.innerHTML=printPNK(info,itemList,'hdmb');
+  if(type==='phieunhapkho'){ const nos=await assignPNKNos(info,[{imei:'ALL'}]); printArea.innerHTML=printPNK({...info,_pnkNo:nos[0]},itemList,'hdmb'); }
   if(type==='bienbanbangiao') printArea.innerHTML=printBienBanBanGiao(info,itemList);
   if(type==='bangke_ctv') printArea.innerHTML=itemList.map((x,i)=>printBangKe(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
-  if(type==='phieunhapkho_ctv') printArea.innerHTML=itemList.map((x,i)=>printPNK(info,[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join('');
+  if(type==='phieunhapkho_ctv'){ const nos=await assignPNKNos(info,itemList); printArea.innerHTML=itemList.map((x,i)=>printPNK({...info,_pnkNo:nos[i]},[x],'ctv')+(i<itemList.length-1?'<div class="page-break"></div>':'')).join(''); }
   setTimeout(()=>window.print(),100);
 }
 render();
