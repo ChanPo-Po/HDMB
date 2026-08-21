@@ -1,4 +1,4 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyxC2Z7Gy4PNJ1nD3jAYNZmAwrvnd9HC2NifZX8NTnroOu5joKGLKH6Ce-Ktp7D6Mxm/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz73hl3p-vRrwGumzuBOmfryYFtt_QXLzxqDkbtMCQKp1E6ijRDJMF-JIueSKCGMw4C/exec";
 const TIME_ZONE = "Asia/Ho_Chi_Minh";
 
 function digitsOnly(value) {
