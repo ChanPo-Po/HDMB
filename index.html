@@ -771,7 +771,7 @@ function printBangKe(info,itemList, mode='hdmb'){
     <div class="bk-info">- Tên doanh nghiệp: <b>HỘ KINH DOANH CỬA HÀNG ĐIỆN THOẠI DI ĐỘNG POPOPHONE</b><br>
     - Mã số thuế: <b>3703340710</b><br>
     - Địa chỉ: ${escapeHTML(info.branch)}<br>
-    - Số điện thoại:<br>
+    - Số điện thoại:<b>0339980909</b><br>
     - Địa chỉ nơi tổ chức thu mua: ${escapeHTML(info.branch)}</div>
     <table class="bk-table">
       <colgroup><col class="bk-col-date"><col class="bk-col-name"><col class="bk-col-address"><col class="bk-col-cccd"><col class="bk-col-phone"><col class="bk-col-item"><col class="bk-col-qty"><col class="bk-col-price"><col class="bk-col-total"><col class="bk-col-note"></colgroup>
@@ -823,7 +823,7 @@ function printDNTT(info,itemList){
   <p class="doc-right"><b>Tổng số tiền đề nghị: ${money(total)}đ</b></p>
   <p><b>Bằng chữ:</b> ${moneyToWords(total)}</p>
   <p><b>Hình thức thanh toán:</b> Chuyển khoản</p><br>
-  <table class="signature"><tr><td>Người đề nghị<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>............................</td><td>Người duyệt<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>............................</td></tr></table>`;
+  <table class="signature"><tr><td>Người đề nghị<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br><b>${escapeHTML(info.staff)}</b></td><td>Kế toán<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>Phan Thị Thùy Nhung</td><td>Người duyệt<br><span style="font-weight:normal">(Ký, ghi rõ họ tên)</span><br><br>Trần Phong</td></tr></table>`;
 }
 
 async function printDoc(type){
